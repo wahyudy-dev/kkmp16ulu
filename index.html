@@ -32,7 +32,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
-    /* Styling Scrollbar & Print Thermal */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -55,7 +54,6 @@
       .no-print { display: none !important; }
     }
 
-    /* Animasi Reticle Laser Scanner */
     .scan-laser {
       position: absolute;
       top: 10%;
@@ -73,20 +71,20 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans select-none">
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen font-sans select-none">
 
-  <!-- ==================== SCREEN 0: MANDATORY LOGIN OVERLAY ==================== -->
-  <div id="modal-login" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+  <!-- ==================== SCREEN 1: MANDATORY FULLSCREEN LOGIN ==================== -->
+  <div id="screen-login" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 my-auto">
       
-      <!-- Logo & Store Branding -->
+      <!-- Store Brand & Logo -->
       <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-primary-500/40 mb-4">
         <i class="fa-solid fa-cash-register text-2xl"></i>
       </div>
       <h2 class="text-xl font-bold text-slate-900 text-center" id="login-store-title">SMART KASIR POS</h2>
-      <p class="text-xs text-slate-500 text-center mt-1 mb-6">Silakan login akun Anda untuk mengakses sistem kasir</p>
+      <p class="text-xs text-slate-500 text-center mt-1 mb-6">Silakan login akun Anda terlebih dahulu untuk mengakses sistem</p>
 
-      <!-- Alert Error Login -->
+      <!-- Alert Notifikasi Error Login -->
       <div id="login-error-alert" class="hidden w-full mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2 font-medium">
         <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm"></i>
         <span id="login-error-msg">Username atau Password salah!</span>
@@ -119,7 +117,7 @@
         </button>
       </form>
 
-      <!-- Quick Demo Login Helpers -->
+      <!-- Quick Demo Login Buttons -->
       <div class="w-full mt-6 pt-4 border-t border-slate-100">
         <p class="text-[11px] font-semibold text-slate-400 text-center mb-2">Akses Cepat Uji Coba (Demo):</p>
         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -134,370 +132,359 @@
     </div>
   </div>
 
-  <!-- ==================== HEADER / TOP NAVBAR ==================== -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <!-- Logo & Store Info -->
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/30">
-          <i class="fa-solid fa-cash-register text-lg"></i>
-        </div>
-        <div>
-          <h1 class="text-base sm:text-lg font-bold leading-tight tracking-tight text-slate-900" id="brand-store-name">SMART KASIR POS</h1>
-          <p class="text-xs text-slate-500 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span id="conn-status-text">Tersambung ke Cloud</span>
-          </p>
-        </div>
-      </div>
+  <!-- ==================== SCREEN 2: MAIN APPLICATION CONTAINER ==================== -->
+  <div id="app-container" class="hidden min-h-screen flex flex-col">
 
-      <!-- Action Buttons & User Profile -->
-      <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- Shortcut Buka Scanner -->
-        <button onclick="openScannerModal()" class="flex items-center gap-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95">
-          <i class="fa-solid fa-barcode text-base text-indigo-600"></i>
-          <span class="hidden sm:inline">Scan Kamera</span>
-        </button>
-
-        <!-- Status Indikator Kasir -->
-        <div class="hidden md:flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-          <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs" id="user-avatar">
-            K
+    <!-- HEADER / TOP NAVBAR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <!-- Logo & Store Info -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/30">
+            <i class="fa-solid fa-cash-register text-lg"></i>
           </div>
-          <div class="text-left text-xs leading-tight">
-            <p class="font-bold text-slate-800" id="user-name-display">Kasir Utama</p>
-            <p class="text-[10px] text-slate-500 capitalize" id="user-role-display">Kasir</p>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold leading-tight tracking-tight text-slate-900" id="brand-store-name">SMART KASIR POS</h1>
+            <p class="text-xs text-slate-500 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="conn-status-text">Tersambung ke Cloud</span>
+            </p>
           </div>
         </div>
 
-        <!-- Tombol Pengaturan & Logout -->
-        <button onclick="openConfigModal()" title="Pengaturan Server API & Toko" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition">
-          <i class="fa-solid fa-gear text-lg"></i>
+        <!-- Action Buttons & User Profile -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Shortcut Buka Scanner -->
+          <button onclick="openScannerModal()" class="flex items-center gap-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95">
+            <i class="fa-solid fa-barcode text-base text-indigo-600"></i>
+            <span class="hidden sm:inline">Scan Kamera</span>
+          </button>
+
+          <!-- Status Indikator User -->
+          <div class="hidden md:flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+            <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs" id="user-avatar">
+              K
+            </div>
+            <div class="text-left text-xs leading-tight">
+              <p class="font-bold text-slate-800" id="user-name-display">Kasir Utama</p>
+              <p class="text-[10px] text-slate-500 capitalize" id="user-role-display">Kasir</p>
+            </div>
+          </div>
+
+          <!-- Tombol Pengaturan & Logout -->
+          <button onclick="openConfigModal()" title="Pengaturan Server API & Toko" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition">
+            <i class="fa-solid fa-gear text-lg"></i>
+          </button>
+          <button onclick="handleLogout()" title="Keluar / Ganti Akun" class="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition">
+            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 border-t border-slate-100 text-xs sm:text-sm font-medium overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('pos')" id="tab-btn-pos" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-primary-600 text-primary-600 font-bold flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-cart-shopping"></i> Mesin Kasir
         </button>
-        <button onclick="handleLogout()" title="Keluar / Ganti Akun" class="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition">
-          <i class="fa-solid fa-right-from-bracket text-lg"></i>
+        <button onclick="switchTab('produk')" id="tab-btn-produk" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-boxes-stacked"></i> Stok & Produk
+        </button>
+        <button onclick="switchTab('pelanggan')" id="tab-btn-pelanggan" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-users"></i> Pelanggan
+        </button>
+        <button onclick="switchTab('hutang')" id="tab-btn-hutang" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-book-bookmark"></i> Catatan Hutang
+        </button>
+        <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-chart-line"></i> Laporan
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Navigation Tabs -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 border-t border-slate-100 text-xs sm:text-sm font-medium overflow-x-auto no-scrollbar">
-      <button onclick="switchTab('pos')" id="tab-btn-pos" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-primary-600 text-primary-600 font-bold flex items-center gap-2 whitespace-nowrap">
-        <i class="fa-solid fa-cart-shopping"></i> Mesin Kasir
-      </button>
-      <button onclick="switchTab('produk')" id="tab-btn-produk" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
-        <i class="fa-solid fa-boxes-stacked"></i> Stok & Produk
-      </button>
-      <button onclick="switchTab('pelanggan')" id="tab-btn-pelanggan" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
-        <i class="fa-solid fa-users"></i> Pelanggan
-      </button>
-      <button onclick="switchTab('hutang')" id="tab-btn-hutang" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
-        <i class="fa-solid fa-book-bookmark"></i> Catatan Hutang
-      </button>
-      <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
-        <i class="fa-solid fa-chart-line"></i> Laporan
-      </button>
-    </div>
-  </header>
-
-  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
-    
-    <!-- TAB 1: POS / MESIN KASIR -->
-    <div id="view-pos" class="tab-view block">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        <!-- Kolom Kiri: Katalog Produk & Pencarian (7 Kolom) -->
-        <div class="lg:col-span-7 flex flex-col space-y-4">
-          <!-- Input Barcode & Search Bar -->
-          <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row gap-2">
-            <div class="relative flex-1">
-              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-              <input type="text" id="pos-search-input" onkeyup="filterPosProducts()" placeholder="Ketik nama produk atau scan barcode..." class="w-full pl-10 pr-10 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition">
-              <button onclick="clearPosSearch()" id="pos-search-clear" class="hidden absolute right-3 top-3 text-slate-400 hover:text-slate-600 text-sm">
-                <i class="fa-solid fa-xmark"></i>
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
+      
+      <!-- TAB 1: POS / MESIN KASIR -->
+      <div id="view-pos" class="tab-view block">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          
+          <!-- Katalog Produk (7 Kolom) -->
+          <div class="lg:col-span-7 flex flex-col space-y-4">
+            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row gap-2">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                <input type="text" id="pos-search-input" onkeyup="filterPosProducts()" placeholder="Ketik nama produk atau scan barcode..." class="w-full pl-10 pr-10 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition">
+                <button onclick="clearPosSearch()" id="pos-search-clear" class="hidden absolute right-3 top-3 text-slate-400 hover:text-slate-600 text-sm">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              
+              <button onclick="openScannerModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition">
+                <i class="fa-solid fa-camera"></i>
+                <span>Scan Barcode</span>
               </button>
             </div>
-            
-            <!-- Tombol Cepat Buka Scanner Kamera -->
-            <button onclick="openScannerModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition">
-              <i class="fa-solid fa-camera"></i>
-              <span>Scan Barcode</span>
-            </button>
+
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs" id="category-chips">
+              <button onclick="selectCategory('SEMUA')" class="cat-chip active px-3 py-1.5 rounded-xl bg-slate-900 text-white font-medium whitespace-nowrap shadow-sm">Semua</button>
+            </div>
+
+            <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[calc(100vh-270px)] overflow-y-auto pr-1">
+              <!-- Rendered by JS -->
+            </div>
           </div>
 
-          <!-- Kategori Filter Chips -->
-          <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs" id="category-chips">
-            <button onclick="selectCategory('SEMUA')" class="cat-chip active px-3 py-1.5 rounded-xl bg-slate-900 text-white font-medium whitespace-nowrap shadow-sm">Semua</button>
-          </div>
+          <!-- Keranjang Kasir (5 Kolom) -->
+          <div class="lg:col-span-5">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 flex flex-col h-full sticky top-24">
+              
+              <div class="border-b border-slate-100 pb-3 mb-3">
+                <div class="flex items-center justify-between mb-2">
+                  <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-primary-600"></i>
+                    <span>Pesanan Pelanggan</span>
+                  </h2>
+                  <button onclick="clearCart()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Kosongkan
+                  </button>
+                </div>
 
-          <!-- Daftar Grid Produk POS -->
-          <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[calc(100vh-270px)] overflow-y-auto pr-1">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
+                <div class="relative">
+                  <select id="cart-customer-select" onchange="handleCustomerChange()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                    <option value="Umum" data-diskon="0">Pelanggan Umum (Non-Member)</option>
+                  </select>
+                  <div id="member-badge" class="hidden mt-1 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                    <i class="fa-solid fa-badge-percent"></i> Member Diskon: <span id="member-discount-rate">0%</span>
+                  </div>
+                </div>
+              </div>
 
-        <!-- Kolom Kanan: Keranjang Kasir & Pembayaran (5 Kolom) -->
-        <div class="lg:col-span-5">
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 flex flex-col h-full sticky top-24">
-            
-            <!-- Header Keranjang & Pilih Pelanggan -->
-            <div class="border-b border-slate-100 pb-3 mb-3">
-              <div class="flex items-center justify-between mb-2">
-                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <i class="fa-solid fa-receipt text-primary-600"></i>
-                  <span>Pesanan Pelanggan</span>
-                </h2>
-                <button onclick="clearCart()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1">
-                  <i class="fa-solid fa-trash-can"></i> Kosongkan
+              <div id="cart-items-container" class="flex-1 overflow-y-auto max-h-[300px] min-h-[160px] divide-y divide-slate-100 pr-1">
+                <div class="h-40 flex flex-col items-center justify-center text-slate-400 text-xs">
+                  <i class="fa-solid fa-basket-shopping text-3xl mb-2 stroke-1"></i>
+                  <p>Keranjang masih kosong</p>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-100 pt-3 mt-3 space-y-1.5 text-xs">
+                <div class="flex justify-between text-slate-500">
+                  <span>Subtotal</span>
+                  <span id="cart-subtotal" class="font-semibold text-slate-800">Rp 0</span>
+                </div>
+                <div class="flex justify-between text-slate-500 items-center">
+                  <span class="flex items-center gap-1">
+                    Diskon
+                    <span id="cart-discount-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">0%</span>
+                  </span>
+                  <span id="cart-discount-val" class="font-semibold text-emerald-600">- Rp 0</span>
+                </div>
+                <div class="flex justify-between text-slate-500 items-center">
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="cart-ppn-toggle" onchange="updateCartTotals()" class="rounded text-primary-600 focus:ring-primary-500">
+                    <span>PPN (11%)</span>
+                  </label>
+                  <span id="cart-ppn-val" class="font-semibold text-slate-700">Rp 0</span>
+                </div>
+
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200/80 mt-2">
+                  <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Tagihan</p>
+                    <p id="cart-grand-total" class="text-xl sm:text-2xl font-black text-primary-700 leading-none mt-0.5">Rp 0</p>
+                  </div>
+                  <span id="cart-total-qty-badge" class="text-xs font-bold bg-primary-100 text-primary-700 px-2 py-1 rounded-lg">
+                    0 Item
+                  </span>
+                </div>
+              </div>
+
+              <div class="pt-3">
+                <button onclick="openPaymentModal()" id="btn-pay" class="w-full bg-primary-600 hover:bg-primary-700 active:scale-[0.98] text-white py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-primary-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i class="fa-solid fa-money-bill-wave"></i>
+                  <span>Bayar Transaksi</span>
                 </button>
               </div>
 
-              <!-- Pilih Pelanggan Dropdown -->
-              <div class="relative">
-                <select id="cart-customer-select" onchange="handleCustomerChange()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl p-2.5 focus:ring-2 focus:ring-primary-500 focus:outline-none">
-                  <option value="Umum" data-diskon="0">Pelanggan Umum (Non-Member)</option>
-                  <!-- Diisi dari data pelanggan -->
-                </select>
-                <div id="member-badge" class="hidden mt-1 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
-                  <i class="fa-solid fa-badge-percent"></i> Member Diskon: <span id="member-discount-rate">0%</span>
-                </div>
-              </div>
             </div>
+          </div>
 
-            <!-- List Item di Keranjang -->
-            <div id="cart-items-container" class="flex-1 overflow-y-auto max-h-[300px] min-h-[160px] divide-y divide-slate-100 pr-1">
-              <!-- Item Keranjang Diisi JS -->
-              <div class="h-40 flex flex-col items-center justify-center text-slate-400 text-xs">
-                <i class="fa-solid fa-basket-shopping text-3xl mb-2 stroke-1"></i>
-                <p>Keranjang masih kosong</p>
-                <p class="text-[11px] text-slate-400 mt-1">Scan barcode atau klik produk di sebelah kiri</p>
-              </div>
-            </div>
+        </div>
+      </div>
 
-            <!-- Kalkulasi Biaya & Diskon -->
-            <div class="border-t border-slate-100 pt-3 mt-3 space-y-1.5 text-xs">
-              <div class="flex justify-between text-slate-500">
-                <span>Subtotal</span>
-                <span id="cart-subtotal" class="font-semibold text-slate-800">Rp 0</span>
-              </div>
-              <div class="flex justify-between text-slate-500 items-center">
-                <span class="flex items-center gap-1">
-                  Diskon
-                  <span id="cart-discount-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">0%</span>
-                </span>
-                <span id="cart-discount-val" class="font-semibold text-emerald-600">- Rp 0</span>
-              </div>
-              <div class="flex justify-between text-slate-500 items-center">
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" id="cart-ppn-toggle" onchange="updateCartTotals()" class="rounded text-primary-600 focus:ring-primary-500">
-                  <span>PPN (11%)</span>
-                </label>
-                <span id="cart-ppn-val" class="font-semibold text-slate-700">Rp 0</span>
-              </div>
-
-              <!-- Grand Total -->
-              <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200/80 mt-2">
-                <div>
-                  <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Tagihan</p>
-                  <p id="cart-grand-total" class="text-xl sm:text-2xl font-black text-primary-700 leading-none mt-0.5">Rp 0</p>
-                </div>
-                <span id="cart-total-qty-badge" class="text-xs font-bold bg-primary-100 text-primary-700 px-2 py-1 rounded-lg">
-                  0 Item
-                </span>
-              </div>
-            </div>
-
-            <!-- Tombol Bayar -->
-            <div class="pt-3">
-              <button onclick="openPaymentModal()" id="btn-pay" class="w-full bg-primary-600 hover:bg-primary-700 active:scale-[0.98] text-white py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-primary-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                <i class="fa-solid fa-money-bill-wave"></i>
-                <span>Bayar Transaksi</span>
-              </button>
-            </div>
-
+      <!-- TAB 2: INVENTORI -->
+      <div id="view-produk" class="tab-view hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Katalog Produk & Inventori</h2>
+            <p class="text-xs text-slate-500">Kelola master barang, harga modal, harga jual, dan stok</p>
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input type="text" id="inventory-search" onkeyup="filterInventoryTable()" placeholder="Cari barcode / nama..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 w-full sm:w-48 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+            <button onclick="openProductModal()" class="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+              <i class="fa-solid fa-plus"></i> Tambah Produk
+            </button>
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- TAB 2: MANAJEMEN PRODUK & STOK -->
-    <div id="view-produk" class="tab-view hidden space-y-4">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Katalog Produk & Inventori</h2>
-          <p class="text-xs text-slate-500">Kelola master barang, harga modal, harga jual, dan cetak barcode label</p>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">Barcode</th>
+                  <th class="p-3">Nama Produk</th>
+                  <th class="p-3">Kategori</th>
+                  <th class="p-3">Satuan</th>
+                  <th class="p-3 text-right">Modal</th>
+                  <th class="p-3 text-right">Jual</th>
+                  <th class="p-3 text-center">Stok</th>
+                  <th class="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-table-body" class="divide-y divide-slate-100">
+                <!-- Loaded by JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <input type="text" id="inventory-search" onkeyup="filterInventoryTable()" placeholder="Cari barcode / nama..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 w-full sm:w-48 focus:ring-2 focus:ring-primary-500 focus:outline-none">
-          <button onclick="openProductModal()" class="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm whitespace-nowrap">
-            <i class="fa-solid fa-plus"></i> Tambah Produk
+      </div>
+
+      <!-- TAB 3: PELANGGAN -->
+      <div id="view-pelanggan" class="tab-view hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Data Pelanggan & Member</h2>
+            <p class="text-xs text-slate-500">Daftar pelanggan tetap dan diskon membership</p>
+          </div>
+          <button onclick="openCustomerModal()" class="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan
           </button>
         </div>
-      </div>
 
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-              <tr>
-                <th class="p-3">Barcode</th>
-                <th class="p-3">Nama Produk</th>
-                <th class="p-3">Kategori</th>
-                <th class="p-3">Satuan</th>
-                <th class="p-3 text-right">Modal</th>
-                <th class="p-3 text-right">Jual</th>
-                <th class="p-3 text-center">Stok</th>
-                <th class="p-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="inventory-table-body" class="divide-y divide-slate-100">
-              <!-- Loaded by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: DATA PELANGGAN -->
-    <div id="view-pelanggan" class="tab-view hidden space-y-4">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Data Pelanggan & Member</h2>
-          <p class="text-xs text-slate-500">Daftar pelanggan tetap dan persentase diskon membership</p>
-        </div>
-        <button onclick="openCustomerModal()" class="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan
-        </button>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-              <tr>
-                <th class="p-3">ID</th>
-                <th class="p-3">Nama Lengkap</th>
-                <th class="p-3">No. WhatsApp/HP</th>
-                <th class="p-3">Alamat</th>
-                <th class="p-3 text-center">Diskon Member</th>
-                <th class="p-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="customer-table-body" class="divide-y divide-slate-100">
-              <!-- Loaded by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: BUKU CATATAN HUTANG -->
-    <div id="view-hutang" class="tab-view hidden space-y-4">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Buku Hutang / Piutang Penjualan</h2>
-          <p class="text-xs text-slate-500">Pantau jatuh tempo piutang pelanggan dan rekam pelunasan cicilan</p>
-        </div>
-        <div class="flex gap-2">
-          <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1">
-            <i class="fa-solid fa-clock-rotate-left"></i> Total Belum Lunas: <span id="total-piutang-badge">Rp 0</span>
-          </span>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">ID</th>
+                  <th class="p-3">Nama Lengkap</th>
+                  <th class="p-3">No. WhatsApp/HP</th>
+                  <th class="p-3">Alamat</th>
+                  <th class="p-3 text-center">Diskon Member</th>
+                  <th class="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="customer-table-body" class="divide-y divide-slate-100">
+                <!-- Loaded by JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-              <tr>
-                <th class="p-3">No. Transaksi</th>
-                <th class="p-3">Pelanggan</th>
-                <th class="p-3">Tanggal</th>
-                <th class="p-3 text-right">Tagihan Total</th>
-                <th class="p-3 text-right">Terbayar (DP)</th>
-                <th class="p-3 text-right">Sisa Hutang</th>
-                <th class="p-3">Jatuh Tempo</th>
-                <th class="p-3 text-center">Status</th>
-                <th class="p-3 text-center">Aksi Bayar</th>
-              </tr>
-            </thead>
-            <tbody id="debt-table-body" class="divide-y divide-slate-100">
-              <!-- Loaded by JS -->
-            </tbody>
-          </table>
+      <!-- TAB 4: HUTANG -->
+      <div id="view-hutang" class="tab-view hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Buku Hutang / Piutang Penjualan</h2>
+            <p class="text-xs text-slate-500">Pantau jatuh tempo piutang dan cicilan pelanggan</p>
+          </div>
+          <div class="flex gap-2">
+            <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1">
+              <i class="fa-solid fa-clock-rotate-left"></i> Total Belum Lunas: <span id="total-piutang-badge">Rp 0</span>
+            </span>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- TAB 5: LAPORAN PENJUALAN -->
-    <div id="view-laporan" class="tab-view hidden space-y-4">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="text-slate-400 text-xs font-semibold uppercase">Total Omzet</div>
-          <div id="report-omzet" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">Rp 0</div>
-          <div class="text-[11px] text-emerald-600 font-medium mt-0.5"><i class="fa-solid fa-arrow-trend-up"></i> Penjualan Kotor</div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="text-slate-400 text-xs font-semibold uppercase">Laba Bersih (Estimasi)</div>
-          <div id="report-laba" class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-1">Rp 0</div>
-          <div class="text-[11px] text-slate-500 font-medium mt-0.5">Penjualan - Modal</div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="text-slate-400 text-xs font-semibold uppercase">Total Transaksi</div>
-          <div id="report-count" class="text-xl sm:text-2xl font-extrabold text-indigo-600 mt-1">0</div>
-          <div class="text-[11px] text-slate-500 font-medium mt-0.5">Struk dicetak</div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="text-slate-400 text-xs font-semibold uppercase">Sisa Piutang Aktif</div>
-          <div id="report-hutang-active" class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-1">Rp 0</div>
-          <div class="text-[11px] text-slate-500 font-medium mt-0.5">Belum lunas</div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">No. Transaksi</th>
+                  <th class="p-3">Pelanggan</th>
+                  <th class="p-3">Tanggal</th>
+                  <th class="p-3 text-right">Tagihan Total</th>
+                  <th class="p-3 text-right">Terbayar (DP)</th>
+                  <th class="p-3 text-right">Sisa Hutang</th>
+                  <th class="p-3">Jatuh Tempo</th>
+                  <th class="p-3 text-center">Status</th>
+                  <th class="p-3 text-center">Aksi Bayar</th>
+                </tr>
+              </thead>
+              <tbody id="debt-table-body" class="divide-y divide-slate-100">
+                <!-- Loaded by JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
-          <h3 class="text-sm font-bold text-slate-900">Riwayat Penjualan</h3>
-          <button onclick="exportReportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-file-excel"></i> Download Excel
-          </button>
+      <!-- TAB 5: LAPORAN -->
+      <div id="view-laporan" class="tab-view hidden space-y-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Total Omzet</div>
+            <div id="report-omzet" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">Rp 0</div>
+            <div class="text-[11px] text-emerald-600 font-medium mt-0.5"><i class="fa-solid fa-arrow-trend-up"></i> Penjualan Kotor</div>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Laba Bersih</div>
+            <div id="report-laba" class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-1">Rp 0</div>
+            <div class="text-[11px] text-slate-500 font-medium mt-0.5">Penjualan - Modal</div>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Total Transaksi</div>
+            <div id="report-count" class="text-xl sm:text-2xl font-extrabold text-indigo-600 mt-1">0</div>
+            <div class="text-[11px] text-slate-500 font-medium mt-0.5">Struk dicetak</div>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="text-slate-400 text-xs font-semibold uppercase">Sisa Piutang</div>
+            <div id="report-hutang-active" class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-1">Rp 0</div>
+            <div class="text-[11px] text-slate-500 font-medium mt-0.5">Belum lunas</div>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-              <tr>
-                <th class="p-2.5">ID Transaksi</th>
-                <th class="p-2.5">Waktu</th>
-                <th class="p-2.5">Pelanggan</th>
-                <th class="p-2.5">Kasir</th>
-                <th class="p-2.5">Rincian Item</th>
-                <th class="p-2.5 text-right">Total Jual</th>
-                <th class="p-2.5 text-right">Laba</th>
-                <th class="p-2.5">Metode</th>
-              </tr>
-            </thead>
-            <tbody id="report-table-body" class="divide-y divide-slate-100">
-              <!-- Loaded by JS -->
-            </tbody>
-          </table>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+            <h3 class="text-sm font-bold text-slate-900">Riwayat Penjualan</h3>
+            <button onclick="exportReportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-file-excel"></i> Download Excel
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5">ID Transaksi</th>
+                  <th class="p-2.5">Waktu</th>
+                  <th class="p-2.5">Pelanggan</th>
+                  <th class="p-2.5">Kasir</th>
+                  <th class="p-2.5">Rincian Item</th>
+                  <th class="p-2.5 text-right">Total Jual</th>
+                  <th class="p-2.5 text-right">Laba</th>
+                  <th class="p-2.5">Metode</th>
+                </tr>
+              </thead>
+              <tbody id="report-table-body" class="divide-y divide-slate-100">
+                <!-- Loaded by JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
-  </main>
+    </main>
+  </div>
 
-  <!-- ==================== MODAL 1: SCANNER KAMERA BARCODE (HTML5-QRCODE) ==================== -->
+  <!-- MODAL 1: SCANNER KAMERA BARCODE -->
   <div id="modal-scanner" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl flex flex-col border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
-      
-      <!-- Header Scanner -->
       <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-barcode text-primary-400 text-lg"></i>
           <div>
             <h3 class="text-sm font-bold leading-tight">Pemindai Barcode / QR</h3>
-            <p class="text-[11px] text-slate-400">Arahkan garis merah ke garis barcode produk</p>
+            <p class="text-[11px] text-slate-400">Arahkan kamera ke garis barcode produk</p>
           </div>
         </div>
         <button onclick="closeScannerModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
@@ -505,13 +492,11 @@
         </button>
       </div>
 
-      <!-- Kamera Viewport -->
       <div class="relative bg-black w-full min-h-[280px] flex items-center justify-center overflow-hidden">
         <div id="scanner-reader" class="w-full"></div>
         <div class="scan-laser pointer-events-none"></div>
       </div>
 
-      <!-- Kontrol Kamera -->
       <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-col space-y-3 text-xs">
         <div class="flex items-center justify-between gap-2">
           <select id="camera-select" onchange="changeScannerCamera()" class="flex-1 bg-white border border-slate-300 text-slate-700 py-2 px-3 rounded-xl focus:ring-2 focus:ring-primary-500 focus:outline-none">
@@ -521,32 +506,23 @@
             <i class="fa-solid fa-bolt"></i>
           </button>
         </div>
-
-        <div class="text-center text-slate-500 text-[11px]">
-          Mendukung Barcode 1D (EAN-13, Code-128, UPC) & 2D (QR Code).<br>
-          <span class="font-medium text-indigo-600">Tip: Barcode scanner fisik (USB/Bluetooth) selalu aktif otomatis!</span>
-        </div>
       </div>
-
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: PEMBAYARAN KASIR ==================== -->
+  <!-- MODAL 2: PEMBAYARAN KASIR -->
   <div id="modal-payment" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
-      
       <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
         <div>
           <h3 class="text-base font-bold text-slate-900">Penyelesaian Pembayaran</h3>
-          <p class="text-xs text-slate-500">Pilih metode bayar & cetak struk penjualan</p>
+          <p class="text-xs text-slate-500">Pilih metode bayar & cetak struk</p>
         </div>
-        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
       <div class="bg-primary-50 border border-primary-100 p-4 rounded-2xl text-center mb-4">
-        <p class="text-xs font-semibold text-primary-600 uppercase">Total Tagihan Bersih</p>
+        <p class="text-xs font-semibold text-primary-600 uppercase">Total Tagihan</p>
         <p id="pay-modal-total-display" class="text-2xl sm:text-3xl font-black text-primary-700">Rp 0</p>
       </div>
 
@@ -564,7 +540,7 @@
 
       <div id="pay-form-tunai" class="space-y-3 text-xs">
         <div>
-          <label class="block text-slate-600 font-semibold mb-1">Jumlah Uang Diterima (Rp)</label>
+          <label class="block text-slate-600 font-semibold mb-1">Uang Diterima (Rp)</label>
           <input type="number" id="pay-cash-input" oninput="calculateChange()" placeholder="0" class="w-full bg-slate-50 border border-slate-200 text-base font-bold rounded-xl p-3 focus:ring-2 focus:ring-primary-500 focus:outline-none">
         </div>
 
@@ -577,7 +553,7 @@
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center mt-2">
-          <span class="font-semibold text-slate-600">Uang Kembalian:</span>
+          <span class="font-semibold text-slate-600">Kembalian:</span>
           <span id="pay-change-display" class="text-lg font-black text-emerald-600">Rp 0</span>
         </div>
       </div>
@@ -603,11 +579,10 @@
           <i class="fa-solid fa-check"></i> Selesaikan Transaksi
         </button>
       </div>
-
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: CETAK STRUK THERMAL NOTA ==================== -->
+  <!-- MODAL 3: STRUK THERMAL NOTA -->
   <div id="modal-receipt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
       <div class="flex justify-between items-center mb-3">
@@ -644,7 +619,6 @@
 
         <div class="text-center pt-3 mt-3 border-t border-dashed border-slate-400 text-[10px] text-slate-500">
           <p>Terima Kasih Atas Kunjungan Anda</p>
-          <p>Barang yang dibeli tidak dapat ditukar/dikembalikan</p>
         </div>
       </div>
 
@@ -654,7 +628,6 @@
         </button>
         <button onclick="closeReceiptModal()" class="px-4 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-bold text-xs">Selesai</button>
       </div>
-
     </div>
   </div>
 
@@ -760,7 +733,7 @@
           <div class="flex justify-between"><span class="text-slate-500">Sisa Tagihan:</span><span id="debt-pay-remaining" class="font-bold text-rose-600">Rp 0</span></div>
         </div>
         <div>
-          <label class="block text-slate-600 font-semibold mb-1">Jumlah Yang Dibayarkan (Rp)</label>
+          <label class="block text-slate-600 font-semibold mb-1">Jumlah Dibayarkan (Rp)</label>
           <input type="number" id="debt-pay-amount" placeholder="0" class="w-full bg-slate-50 border border-slate-200 text-sm font-bold rounded-xl p-2.5 focus:ring-2 focus:ring-primary-500 focus:outline-none">
         </div>
         <div>
@@ -815,13 +788,13 @@
   <script>
     /**
      * SMART POS SYSTEM JAVASCRIPT
-     * Mandatory Login System & Dual Backend (GitHub Pages + Google Apps Script)
+     * Mandatory Authentication Guard & Dual Backend
      */
 
     const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwnOzXjDxNlwOMAd3Hl5S8pEWk2d323D9R6XBe8XVb9X_w4IN_AcI61mNbH7KiBUqfU/exec";
 
     // Global State
-    let currentUser = null;
+    let currentUser = null; // Stays null until valid login
     let products = [];
     let customers = [];
     let debts = [];
@@ -840,7 +813,6 @@
       loadLocalSettings();
       initPhysicalBarcodeScanner();
       checkLoginState();
-      renderCartUI();
     });
 
     function checkLoginState() {
@@ -848,27 +820,43 @@
       if (savedUser) {
         try {
           currentUser = JSON.parse(savedUser);
-          applyLoggedUserUI();
-          hideLoginScreen();
+          showAppUI();
           checkBackendConnection();
         } catch (e) {
-          showLoginScreen();
+          showLoginUI();
         }
       } else {
-        showLoginScreen();
+        showLoginUI();
       }
     }
 
-    function showLoginScreen() {
+    function showLoginUI() {
+      currentUser = null;
       const storeName = localStorage.getItem('store_name') || 'SMART KASIR POS';
       const titleEl = document.getElementById('login-store-title');
       if (titleEl) titleEl.innerText = storeName;
-      document.getElementById('modal-login').classList.remove('hidden');
+
+      // Lock main app UI completely
+      document.getElementById('app-container').classList.add('hidden');
+      document.getElementById('screen-login').classList.remove('hidden');
       document.getElementById('login-error-alert').classList.add('hidden');
+      
+      const userField = document.getElementById('login-username');
+      if (userField) userField.focus();
     }
 
-    function hideLoginScreen() {
-      document.getElementById('modal-login').classList.add('hidden');
+    function showAppUI() {
+      if (!currentUser) {
+        showLoginUI();
+        return;
+      }
+      document.getElementById('screen-login').classList.add('hidden');
+      document.getElementById('app-container').classList.remove('hidden');
+
+      document.getElementById('user-name-display').innerText = currentUser.username;
+      document.getElementById('user-role-display').innerText = currentUser.role;
+      document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
+      renderCartUI();
     }
 
     function togglePasswordVisibility() {
@@ -913,8 +901,7 @@
         if (res && res.success && res.user) {
           currentUser = res.user;
           sessionStorage.setItem('smart_pos_user', JSON.stringify(currentUser));
-          applyLoggedUserUI();
-          hideLoginScreen();
+          showAppUI();
           showToast(`Selamat datang, ${currentUser.username}!`);
           checkBackendConnection();
         } else {
@@ -922,13 +909,13 @@
           errBox.classList.remove('hidden');
         }
       } catch (e) {
-        // Fallback login luring untuk pengujian awal
+        // Fallback login luring offline/demo
         if (u === 'admin' && p === 'admin123') {
           currentUser = { username: "admin", role: "Admin" };
         } else if (u === 'kasir' && p === 'kasir123') {
           currentUser = { username: "kasir", role: "Kasir" };
         } else {
-          errMsg.innerText = "Gagal terhubung ke server atau akun tidak cocok!";
+          errMsg.innerText = "Gagal terhubung ke server atau akun tidak ditemukan!";
           errBox.classList.remove('hidden');
           btn.disabled = false;
           btn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem`;
@@ -936,9 +923,8 @@
         }
 
         sessionStorage.setItem('smart_pos_user', JSON.stringify(currentUser));
-        applyLoggedUserUI();
-        hideLoginScreen();
-        showToast(`Masuk Mode Luring sebagai ${currentUser.username}`);
+        showAppUI();
+        showToast(`Masuk Mode Standalone sebagai ${currentUser.username}`);
         checkBackendConnection();
       } finally {
         btn.disabled = false;
@@ -946,11 +932,13 @@
       }
     }
 
-    function applyLoggedUserUI() {
-      if (!currentUser) return;
-      document.getElementById('user-name-display').innerText = currentUser.username;
-      document.getElementById('user-role-display').innerText = currentUser.role;
-      document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
+    function handleLogout() {
+      if (confirm("Apakah Anda yakin ingin keluar dari akun kasir?")) {
+        sessionStorage.removeItem('smart_pos_user');
+        cart = [];
+        showLoginUI();
+        showToast("Anda telah keluar dari sistem.");
+      }
     }
 
     function playBeepSound(type = 'success') {
@@ -1028,6 +1016,17 @@
     }
 
     function fallbackLocalHandler(action, payload) {
+      if (action === 'login') {
+        const u = (payload.u || payload.username || '').toString().trim().toLowerCase();
+        const p = (payload.p || payload.password || '').toString().trim();
+        if ((u === 'admin' && p === 'admin123') || (u === 'kasir' && p === 'kasir123')) {
+          return {
+            success: true,
+            user: { username: u, role: u === 'admin' ? 'Admin' : 'Kasir' }
+          };
+        }
+        return { success: false, message: "Username atau Password salah!" };
+      }
       if (action === 'getProducts') {
         return [
           { Barcode: "TPTR0050", Nama: "BERAS ROJO LELE SUPER", Kategori: "Sembako", Satuan: "Kg", HargaModal: 11500, HargaJual: 14000, Stok: 100 },
@@ -1046,37 +1045,57 @@
       if (action === 'getReports') return [];
       return { success: true };
     }
+    async function handleLoginSubmit(event) {
+      if (event) event.preventDefault();
 
-    async function checkBackendConnection() {
-      const statusText = document.getElementById('conn-status-text');
-      statusText.innerText = "Menghubungkan...";
+      const u = document.getElementById('login-username').value.trim();
+      const p = document.getElementById('login-password').value.trim();
+      const errBox = document.getElementById('login-error-alert');
+      const errMsg = document.getElementById('login-error-msg');
+      const btn = document.getElementById('btn-login-submit');
+
+      if (!u || !p) {
+        errMsg.innerText = "Username dan password wajib diisi!";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Memeriksa Akun...`;
+
       try {
-        const [prodList, custList, debtList, repList] = await Promise.all([
-          callBackend('getProducts'),
-          callBackend('getCustomers'),
-          callBackend('getDebts'),
-          callBackend('getReports')
-        ]);
-
-        products = Array.isArray(prodList) ? prodList : [];
-        customers = Array.isArray(custList) ? custList : [];
-        debts = Array.isArray(debtList) ? debtList : [];
-        reports = Array.isArray(repList) ? repList : [];
-
-        renderPosProducts();
-        renderCustomerSelect();
-        renderInventoryTable();
-        renderCustomerTable();
-        renderDebtTable();
-        renderReports();
-
-        statusText.innerText = "Tersambung ke Cloud";
+        const res = await callBackend('login', { u, p });
+        if (res && res.success && res.user) {
+          currentUser = res.user;
+          sessionStorage.setItem('smart_pos_user', JSON.stringify(currentUser));
+          showAppUI();
+          showToast(`Selamat datang, ${currentUser.username}!`);
+          checkBackendConnection();
+        } else {
+          errMsg.innerText = (res && res.message) ? res.message : "Username atau Password salah!";
+          errBox.classList.remove('hidden');
+        }
       } catch (e) {
-        statusText.innerText = "Mode Offline / Standalone";
+        // Fallback login luring offline/demo
+        if ((u.toLowerCase() === 'admin' && p === 'admin123') || (u.toLowerCase() === 'kasir' && p === 'kasir123')) {
+          currentUser = { username: u.toLowerCase(), role: u.toLowerCase() === 'admin' ? 'Admin' : 'Kasir' };
+          sessionStorage.setItem('smart_pos_user', JSON.stringify(currentUser));
+          showAppUI();
+          showToast(`Masuk Mode Standalone sebagai ${currentUser.username}`);
+          checkBackendConnection();
+        } else {
+          errMsg.innerText = "Gagal terhubung ke server atau akun tidak ditemukan!";
+          errBox.classList.remove('hidden');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem`;
       }
     }
 
     async function openScannerModal() {
+      if (!currentUser) return;
       const modal = document.getElementById('modal-scanner');
       modal.classList.remove('hidden');
 
@@ -1151,6 +1170,7 @@
     }
 
     function onBarcodeScannedSuccess(barcodeRaw) {
+      if (!currentUser) return; // Strict lock
       const code = barcodeRaw.trim();
       if (!code) return;
 
@@ -1168,6 +1188,8 @@
 
     function initPhysicalBarcodeScanner() {
       window.addEventListener('keydown', (e) => {
+        if (!currentUser) return; // Strict lock when logged out
+
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         const activeId = document.activeElement ? document.activeElement.id : '';
 
@@ -1744,17 +1766,6 @@
       const activeBtn = document.getElementById(`tab-btn-${tabId}`);
       activeBtn.classList.add('border-primary-600', 'text-primary-600', 'font-bold');
       activeBtn.classList.remove('border-transparent', 'text-slate-600');
-    }
-
-    function handleLogout() {
-      if (confirm("Apakah Anda yakin ingin keluar dari akun kasir?")) {
-        sessionStorage.removeItem('smart_pos_user');
-        currentUser = null;
-        document.getElementById('login-username').value = "";
-        document.getElementById('login-password').value = "";
-        showLoginScreen();
-        showToast("Anda telah keluar dari sistem.");
-      }
     }
 
     function formatRupiah(num) {
