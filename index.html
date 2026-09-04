@@ -684,8 +684,21 @@
         </div>
       </div>
 
+      <!-- Kirim Struk via WhatsApp -->
+      <div class="mt-3 pt-3 border-t border-slate-100">
+        <label class="block text-[11px] font-semibold text-slate-600 mb-1.5">Kirim Struk ke WhatsApp</label>
+        <div class="flex gap-2">
+          <input type="tel" id="rcpt-wa-number" placeholder="mis. 0812xxxxxxx"
+            class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
+          <button onclick="sendReceiptViaWhatsApp()" title="Kirim via WhatsApp"
+            class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap">
+            <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA
+          </button>
+        </div>
+      </div>
+
       <!-- Action Struk -->
-      <div class="flex gap-2 mt-4">
+      <div class="flex gap-2 mt-3">
         <button onclick="window.print()" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-print"></i> Cetak Struk
         </button>
@@ -1793,9 +1806,17 @@
     /**
      * Tampilkan Struk Thermal
      */
+    let lastReceiptData = null;
+    let lastReceiptTrxId = null;
+    let lastReceiptTimeText = '';
+
     function showReceiptModal(data, trxId) {
+      lastReceiptData = data;
+      lastReceiptTrxId = trxId;
+      lastReceiptTimeText = new Date().toLocaleString('id-ID');
+
       document.getElementById('rcpt-trx-id').innerText = trxId;
-      document.getElementById('rcpt-time').innerText = new Date().toLocaleString('id-ID');
+      document.getElementById('rcpt-time').innerText = lastReceiptTimeText;
       document.getElementById('rcpt-cashier').innerText = data.kasir || currentUser.username;
       document.getElementById('rcpt-customer').innerText = data.pelanggan || 'Umum';
 
@@ -1823,7 +1844,81 @@
       document.getElementById('rcpt-cash').innerText = `Rp ${formatRupiah(data.cash || data.totalJual)}`;
       document.getElementById('rcpt-change').innerText = `Rp ${formatRupiah(data.change || 0)}`;
 
+      // Prefill nomor WA jika pelanggannya member yang punya no HP tersimpan
+      const waInput = document.getElementById('rcpt-wa-number');
+      const cust = customers.find(c => c.id === data.idPelanggan);
+      waInput.value = cust && cust.phone ? cust.phone : '';
+
       document.getElementById('modal-receipt').classList.remove('hidden');
+    }
+
+    /**
+     * Kirim Struk via WhatsApp (wa.me) sebagai pesan teks terformat
+     */
+    function sendReceiptViaWhatsApp() {
+      if (!lastReceiptData) {
+        showToast("Belum ada struk untuk dikirim.", "error");
+        return;
+      }
+
+      const rawPhone = document.getElementById('rcpt-wa-number').value.trim();
+      if (!rawPhone) {
+        showToast("Isi dulu nomor WhatsApp tujuan.", "error");
+        document.getElementById('rcpt-wa-number').focus();
+        return;
+      }
+
+      // Normalisasi nomor ke format internasional (62xxxxxxxxxx) untuk wa.me
+      let phoneDigits = rawPhone.replace(/[^0-9]/g, '');
+      if (phoneDigits.startsWith('0')) {
+        phoneDigits = '62' + phoneDigits.slice(1);
+      } else if (phoneDigits.startsWith('620')) {
+        phoneDigits = '62' + phoneDigits.slice(3);
+      } else if (!phoneDigits.startsWith('62')) {
+        phoneDigits = '62' + phoneDigits;
+      }
+
+      if (phoneDigits.length < 9) {
+        showToast("Nomor WhatsApp tidak valid.", "error");
+        return;
+      }
+
+      const data = lastReceiptData;
+      const storeName = document.getElementById('rcpt-store-name').innerText;
+      const storeAddr = document.getElementById('rcpt-store-address').innerText;
+
+      const itemLines = (data.items || []).map(item =>
+        `- ${item.nama}\n  ${item.qty} ${item.satuan || 'Unit'} x Rp ${formatRupiah(item.harga)} = Rp ${formatRupiah(item.qty * item.harga)}`
+      ).join('\n');
+
+      const totalSebelumDiskon = data.totalJual + (data.diskon || 0) - (data.ppn || 0);
+
+      const messageLines = [
+        `*${storeName}*`,
+        storeAddr,
+        '',
+        `No. Struk: ${lastReceiptTrxId}`,
+        `Waktu: ${lastReceiptTimeText}`,
+        `Kasir: ${data.kasir || currentUser.username}`,
+        `Pelanggan: ${data.pelanggan || 'Umum'}`,
+        '',
+        'Rincian Belanja:',
+        itemLines,
+        '-----------------------------',
+        `Total: Rp ${formatRupiah(totalSebelumDiskon)}`,
+        `Diskon: - Rp ${formatRupiah(data.diskon || 0)}`,
+        `PPN (11%): Rp ${formatRupiah(data.ppn || 0)}`,
+        `*Grand Total: Rp ${formatRupiah(data.totalJual)}*`,
+        `Bayar (${data.metodeBayar}): Rp ${formatRupiah(data.cash || data.totalJual)}`,
+        `Kembali: Rp ${formatRupiah(data.change || 0)}`,
+        '',
+        'Terima kasih atas kunjungan Anda 🙏',
+        'Barang yang dibeli tidak dapat ditukar/dikembalikan.'
+      ];
+
+      const message = messageLines.join('\n');
+      const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, '_blank');
     }
 
     function closeReceiptModal() {
@@ -1965,11 +2060,12 @@
      */
     function renderCustomerSelect() {
       const select = document.getElementById('cart-customer-select');
-      select.innerHTML = `<option value="Umum" data-diskon="0">Pelanggan Umum (Non-Member)</option>`;
+      select.innerHTML = `<option value="Umum" data-diskon="0" data-phone="">Pelanggan Umum (Non-Member)</option>`;
       customers.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.setAttribute('data-diskon', c.diskonPercent || 0);
+        opt.setAttribute('data-phone', c.phone || '');
         opt.text = `${c.nama} (Member Diskon ${c.diskonPercent}%)`;
         select.appendChild(opt);
       });
