@@ -504,7 +504,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
           <h3 class="text-sm font-bold text-slate-900">Riwayat Penjualan</h3>
-          <button onclick="exportReportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+          <button id="report-export-btn" onclick="exportReportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-file-excel"></i> Download Excel
           </button>
         </div>
@@ -2341,12 +2341,13 @@
       });
     }
 
-    // Sembunyikan panel filter tanggal untuk role Kasir (hanya boleh lihat hari ini)
+    // Sembunyikan panel filter tanggal & tombol export untuk role Kasir (hanya boleh lihat hari ini)
     function applyReportRoleRestriction() {
       const filterBar = document.getElementById('report-filter-bar');
-      if (!filterBar) return;
+      const exportBtn = document.getElementById('report-export-btn');
       const isKasir = currentUser && currentUser.role === 'Kasir';
-      filterBar.classList.toggle('hidden', isKasir);
+      if (filterBar) filterBar.classList.toggle('hidden', isKasir);
+      if (exportBtn) exportBtn.classList.toggle('hidden', isKasir);
     }
 
     function renderReports() {
@@ -2447,6 +2448,10 @@
     }
 
     function exportReportToExcel() {
+      if (currentUser && currentUser.role === 'Kasir') {
+        showToast("Download Excel hanya tersedia untuk Admin.", "error");
+        return;
+      }
       const filtered = getFilteredReports();
       if (filtered.length === 0) {
         showToast("Belum ada data riwayat penjualan pada periode ini", "error");
