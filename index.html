@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SMART KASIR KKMP 16 ULU - Scan Barcode & Inventory</title>
+  <title>SMART KASIR POS - Scan Barcode & Inventory</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -78,62 +78,6 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans select-none">
 
-  <!-- ==================== LOGIN SCREEN ==================== -->
-  <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-primary-600 via-indigo-600 to-slate-900 p-4">
-    <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
-      <div class="flex flex-col items-center mb-6">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/30 mb-3">
-          <i class="fa-solid fa-cash-register text-2xl"></i>
-        </div>
-        <h1 class="text-lg font-bold text-slate-900" id="login-store-name">SMART KASIR KKMP 16 ULU</h1>
-        <p class="text-xs text-slate-500 mt-1">Silakan login untuk masuk ke sistem</p>
-      </div>
-
-      <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-3">
-        <div>
-          <label class="block text-slate-700 font-semibold text-xs mb-1">Username</label>
-          <div class="relative">
-            <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="login-username" autocomplete="username" required
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pl-9 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
-              placeholder="mis. admin">
-          </div>
-        </div>
-        <div>
-          <label class="block text-slate-700 font-semibold text-xs mb-1">Password</label>
-          <div class="relative">
-            <i class="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="password" id="login-password" autocomplete="current-password" required
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pl-9 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
-              placeholder="••••••••">
-            <button type="button" onclick="toggleLoginPasswordVisibility()" id="login-pw-toggle"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </div>
-        </div>
-
-        <div id="login-error-box" class="hidden bg-rose-50 border border-rose-200 text-rose-600 text-xs rounded-xl p-2.5 flex items-start gap-2">
-          <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
-          <span id="login-error-text">Username atau Password salah.</span>
-        </div>
-
-        <button type="submit" id="login-submit-btn"
-          class="w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-sm shadow-sm transition active:scale-[0.98] flex items-center justify-center gap-2">
-          <span id="login-submit-text">Masuk</span>
-        </button>
-      </form>
-
-      <div class="mt-4 flex items-center gap-2 text-[11px] text-slate-400">
-        <span class="w-2 h-2 rounded-full flex-shrink-0" id="login-conn-dot"></span>
-        <span id="login-conn-text">Memeriksa koneksi ke Spreadsheet...</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== APP SHELL (tersembunyi sampai login berhasil) ==================== -->
-  <div id="app-shell" class="hidden flex-1 flex flex-col min-h-screen">
-
   <!-- ==================== HEADER / TOP NAVBAR ==================== -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -143,7 +87,7 @@
           <i class="fa-solid fa-cash-register text-lg"></i>
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-bold leading-tight tracking-tight text-slate-900" id="brand-store-name">SMART KASIR KKMP 16 ULU</h1>
+          <h1 class="text-base sm:text-lg font-bold leading-tight tracking-tight text-slate-900" id="brand-store-name">SMART KASIR POS</h1>
           <p class="text-xs text-slate-500 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="conn-status-text">Tersambung ke Cloud</span>
@@ -281,28 +225,9 @@
                 <span>Subtotal</span>
                 <span id="cart-subtotal" class="font-semibold text-slate-800">Rp 0</span>
               </div>
-
-              <!-- Input Diskon Manual (Rp atau %) -->
-              <div class="flex items-center justify-between gap-2 text-slate-500">
-                <span class="flex items-center gap-1 whitespace-nowrap">
-                  <i class="fa-solid fa-tag text-[11px]"></i> Diskon Manual
-                </span>
-                <div class="flex items-center gap-1">
-                  <input type="number" id="cart-manual-discount-input" min="0" step="any" value="0"
-                    oninput="updateCartTotals()" placeholder="0"
-                    class="w-20 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
-                  <div class="flex rounded-lg border border-slate-200 overflow-hidden text-[10px] font-bold">
-                    <button type="button" id="cart-manual-discount-type-percent" onclick="setManualDiscountType('percent')"
-                      class="px-2 py-1.5 bg-primary-600 text-white">%</button>
-                    <button type="button" id="cart-manual-discount-type-amount" onclick="setManualDiscountType('amount')"
-                      class="px-2 py-1.5 bg-slate-50 text-slate-500">Rp</button>
-                  </div>
-                </div>
-              </div>
-
               <div class="flex justify-between text-slate-500 items-center">
                 <span class="flex items-center gap-1">
-                  Total Diskon
+                  Diskon
                   <span id="cart-discount-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">0%</span>
                 </span>
                 <span id="cart-discount-val" class="font-semibold text-emerald-600">- Rp 0</span>
@@ -452,30 +377,6 @@
 
     <!-- TAB 5: LAPORAN PENJUALAN -->
     <div id="view-laporan" class="tab-view hidden space-y-4">
-
-      <!-- Filter Periode: Tanggal / Bulan / Tahun (khusus Admin) -->
-      <div id="report-filter-bar" class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
-        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Dari Tanggal</label>
-            <input type="date" id="report-filter-from" onchange="onReportFilterChange()"
-              class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sampai Tanggal</label>
-            <input type="date" id="report-filter-to" onchange="onReportFilterChange()"
-              class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            <button onclick="setReportFilterPreset('today')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Hari Ini</button>
-            <button onclick="setReportFilterPreset('month')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Bulan Ini</button>
-            <button onclick="setReportFilterPreset('year')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Tahun Ini</button>
-            <button onclick="setReportFilterPreset('all')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Semua</button>
-          </div>
-          <div class="sm:ml-auto text-[11px] text-slate-400" id="report-filter-summary"></div>
-        </div>
-      </div>
-
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
@@ -504,7 +405,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
           <h3 class="text-sm font-bold text-slate-900">Riwayat Penjualan</h3>
-          <button id="report-export-btn" onclick="exportReportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+          <button onclick="exportReportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-file-excel"></i> Download Excel
           </button>
         </div>
@@ -520,7 +421,6 @@
                 <th class="p-2.5 text-right">Total Jual</th>
                 <th class="p-2.5 text-right">Laba</th>
                 <th class="p-2.5">Metode</th>
-                <th class="p-2.5 text-center">Struk</th>
               </tr>
             </thead>
             <tbody id="report-table-body" class="divide-y divide-slate-100">
@@ -531,7 +431,7 @@
       </div>
     </div>
 
-    </main>
+  </main>
 
   <!-- ==================== MODAL 1: SCANNER KAMERA BARCODE (HTML5-QRCODE) ==================== -->
   <div id="modal-scanner" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -667,19 +567,16 @@
   <div id="modal-receipt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
       <div class="flex justify-between items-center mb-3">
-        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-          Struk Pembayaran
-          <span id="rcpt-reprint-badge" class="hidden text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">CETAK ULANG</span>
-        </h3>
+        <h3 class="text-sm font-bold text-slate-900">Struk Pembayaran</h3>
         <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <!-- Preview Struk Kertas Kasir (58mm) -->
       <div class="flex-1 overflow-y-auto bg-slate-50 p-4 border border-slate-200 rounded-xl font-mono text-[11px] leading-relaxed select-text" id="printable-receipt">
         <div class="text-center pb-2 border-b border-dashed border-slate-400 mb-2">
-          <p class="font-bold text-xs uppercase" id="rcpt-store-name">SMART KASIR KKMP 16 ULU</p>
-          <p class="text-[10px] text-slate-500" id="rcpt-store-address">Griys Parasjaya E23, Palembang</p>
-          <p class="text-[10px] text-slate-500" id="rcpt-store-phone">WA: 082370730000</p>
+          <p class="font-bold text-xs uppercase" id="rcpt-store-name">SMART KASIR POS</p>
+          <p class="text-[10px] text-slate-500" id="rcpt-store-address">Palembang, Indonesia</p>
+          <p class="text-[10px] text-slate-500" id="rcpt-store-phone">WA: 0812-3456-7890</p>
         </div>
 
         <div class="pb-2 border-b border-dashed border-slate-400 mb-2 space-y-0.5 text-[10px]">
@@ -712,21 +609,8 @@
         </div>
       </div>
 
-      <!-- Kirim Struk via WhatsApp -->
-      <div class="mt-3 pt-3 border-t border-slate-100">
-        <label class="block text-[11px] font-semibold text-slate-600 mb-1.5">Kirim Struk ke WhatsApp</label>
-        <div class="flex gap-2">
-          <input type="tel" id="rcpt-wa-number" placeholder="mis. 0812xxxxxxx"
-            class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
-          <button onclick="sendReceiptViaWhatsApp()" title="Kirim via WhatsApp"
-            class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap">
-            <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA
-          </button>
-        </div>
-      </div>
-
       <!-- Action Struk -->
-      <div class="flex gap-2 mt-3">
+      <div class="flex gap-2 mt-4">
         <button onclick="window.print()" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-print"></i> Cetak Struk
         </button>
@@ -882,7 +766,7 @@
 
       <div class="space-y-3 text-xs">
         <div>
-          <label class="block text-slate-700 font-semibold mb-1">https://script.google.com/macros/s/AKfycbxqvODFBHkFLQrSk08AiDCo-fg4jFiyLKm4zJUf44Z1U9SZe_WzTAs8rCnwiSdLny4b/exec</label>
+          <label class="block text-slate-700 font-semibold mb-1">Google Apps Script Web App URL</label>
           <input type="text" id="cfg-gas-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono text-[11px] focus:ring-2 focus:ring-primary-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
           <p class="text-[10px] text-slate-400 mt-1">URL Web App Google Apps Script dari spreadsheet kasir Anda</p>
         </div>
@@ -910,9 +794,6 @@
     </div>
   </div>
 
-  </div>
-  <!-- ==================== /APP SHELL ==================== -->
-
   <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
   <div id="toast-box" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
@@ -924,10 +805,10 @@
      */
 
     // Default Web App URL dari proyek spreadsheet Anda
-    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxqvODFBHkFLQrSk08AiDCo-fg4jFiyLKm4zJUf44Z1U9SZe_WzTAs8rCnwiSdLny4b/exec";
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwnOzXjDxNlwOMAd3Hl5S8pEWk2d323D9R6XBe8XVb9X_w4IN_AcI61mNbH7KiBUqfU/exec";
 
     // Global State
-    let currentUser = null; // diisi setelah login berhasil, lihat checkExistingSession()
+    let currentUser = { username: "kasir", role: "Kasir" };
     let products = [];
     let customers = [];
     let debts = [];
@@ -946,134 +827,10 @@
     // Inisialisasi Saat Dokumen Siap
     window.addEventListener('DOMContentLoaded', () => {
       loadLocalSettings();
-      document.getElementById('login-store-name').innerText =
-        localStorage.getItem('store_name') || 'SMART KASIR KKMP 16 ULU';
-      checkExistingSession();
-    });
-
-    /**
-     * ==================== LOGIN & SESI ====================
-     */
-
-    // Cek apakah sudah pernah login sebelumnya (sesi tersimpan di browser ini)
-    function checkExistingSession() {
-      const saved = localStorage.getItem('pos_current_user');
-      if (saved) {
-        try {
-          const user = JSON.parse(saved);
-          if (user && user.username && user.role) {
-            enterApp(user);
-            return;
-          }
-        } catch (e) { /* sesi rusak, lanjut ke layar login */ }
-      }
-      showLoginScreen();
-    }
-
-    function showLoginScreen() {
-      document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('app-shell').classList.add('hidden');
-      document.getElementById('login-username').focus();
-      pingBackendForLoginScreen();
-    }
-
-    // Ping ringan hanya untuk menampilkan status koneksi di layar login (bukan untuk data)
-    async function pingBackendForLoginScreen() {
-      const dot = document.getElementById('login-conn-dot');
-      const text = document.getElementById('login-conn-text');
-      text.innerText = "Memeriksa koneksi ke Spreadsheet...";
-      dot.className = "w-2 h-2 rounded-full flex-shrink-0 bg-amber-400 animate-pulse";
-
-      window.lastBackendError = null;
-      await callBackend('getCustomers');
-
-      if (window.lastBackendError) {
-        dot.className = "w-2 h-2 rounded-full flex-shrink-0 bg-rose-500";
-        text.innerText = "Spreadsheet belum tersambung: " + window.lastBackendError;
-      } else {
-        dot.className = "w-2 h-2 rounded-full flex-shrink-0 bg-emerald-500";
-        text.innerText = "Tersambung ke Spreadsheet";
-      }
-    }
-
-    function toggleLoginPasswordVisibility() {
-      const input = document.getElementById('login-password');
-      const icon = document.querySelector('#login-pw-toggle i');
-      const isHidden = input.type === 'password';
-      input.type = isHidden ? 'text' : 'password';
-      icon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-    }
-
-    function showLoginError(message) {
-      const box = document.getElementById('login-error-box');
-      document.getElementById('login-error-text').innerText = message;
-      box.classList.remove('hidden');
-    }
-
-    function hideLoginError() {
-      document.getElementById('login-error-box').classList.add('hidden');
-    }
-
-    async function handleLoginSubmit(evt) {
-      evt.preventDefault();
-      hideLoginError();
-
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
-      if (!username || !password) return;
-
-      const btn = document.getElementById('login-submit-btn');
-      const btnText = document.getElementById('login-submit-text');
-      btn.disabled = true;
-      btn.classList.add('opacity-70', 'cursor-not-allowed');
-      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...';
-
-      try {
-        // Sengaja pakai role sementara 'Kasir' di sini karena role asli baru diketahui
-        // SETELAH login berhasil (dibaca dari sheet Users, bukan dipilih sendiri oleh user).
-        currentUser = currentUser || { username: '', role: 'Kasir' };
-        const result = await callBackend('login', { u: username, p: password });
-
-        if (window.lastBackendError) {
-          showLoginError(
-            "Tidak bisa menghubungi Spreadsheet: " + window.lastBackendError +
-            " (Cek Pengaturan URL API di ikon gerigi setelah masuk, atau hubungi admin.)"
-          );
-          return;
-        }
-
-        if (result && result.success && result.user) {
-          localStorage.setItem('pos_current_user', JSON.stringify(result.user));
-          document.getElementById('login-password').value = '';
-          enterApp(result.user);
-        } else {
-          showLoginError((result && result.message) || "Username atau Password salah.");
-        }
-      } catch (err) {
-        showLoginError("Gagal login: " + (err.message || err));
-      } finally {
-        btn.disabled = false;
-        btn.classList.remove('opacity-70', 'cursor-not-allowed');
-        btnText.innerText = 'Masuk';
-      }
-    }
-
-    // Masuk ke aplikasi utama setelah login (atau sesi tersimpan) valid
-    function enterApp(user) {
-      currentUser = { username: user.username, role: user.role };
-
-      document.getElementById('user-name-display').innerText = currentUser.username;
-      document.getElementById('user-role-display').innerText = currentUser.role;
-      document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
-
-      document.getElementById('login-screen').classList.add('hidden');
-      document.getElementById('app-shell').classList.remove('hidden');
-
       initPhysicalBarcodeScanner();
-      renderCartUI();
-      applyReportRoleRestriction();
       checkBackendConnection();
-    }
+      renderCartUI();
+    });
 
     /**
      * Web Audio API: Bunyi Beep Kasir saat Scan Berhasil
@@ -1147,54 +904,24 @@
       }
 
       // Mode 2: Dijalankan di GitHub Pages / Web Hosting Mandiri via Fetch API
-      if (!gasUrl || !gasUrl.startsWith('https://script.google.com/')) {
-        window.lastBackendError = "URL Web App belum diatur / tidak valid. Buka menu Pengaturan (⚙️) dan isi URL /exec dari deployment Apps Script Anda.";
-        console.error(window.lastBackendError);
-        return fallbackLocalHandler(action, payload);
-      }
-
       try {
         const url = new URL(gasUrl);
         url.searchParams.append('action', action);
-        url.searchParams.append('role', (currentUser && currentUser.role) || 'Kasir');
+        url.searchParams.append('role', currentUser.role);
         url.searchParams.append('payload', JSON.stringify(payload));
 
         const response = await fetch(url.toString(), {
           method: 'GET',
           mode: 'cors',
-          cache: 'no-cache',
-          redirect: 'follow'
+          cache: 'no-cache'
         });
 
         if (!response.ok) throw new Error("HTTP error " + response.status);
-
-        // Apps Script yang belum di-deploy dengan akses "Anyone" akan mengembalikan
-        // halaman login Google (text/html), bukan JSON. Deteksi ini secara eksplisit
-        // supaya errornya jelas, bukan cuma "gagal parse JSON".
-        const contentType = response.headers.get('content-type') || '';
-        const rawText = await response.text();
-
-        if (contentType.includes('text/html') || rawText.trim().startsWith('<')) {
-          throw new Error(
-            "Backend mengembalikan halaman HTML (bukan JSON). Ini biasanya berarti deployment " +
-            "Apps Script BELUM diatur ke akses 'Anyone' (Siapa saja), atau URL yang dipakai salah/kadaluarsa."
-          );
-        }
-
-        let result;
-        try {
-          result = JSON.parse(rawText);
-        } catch (parseErr) {
-          throw new Error("Gagal parse JSON dari backend: " + parseErr.message);
-        }
-
-        window.lastBackendError = null;
+        const result = await response.json();
         return result;
       } catch (err) {
-        window.lastBackendError = err.message || String(err);
-        console.error("Koneksi API Cloud gagal untuk action '" + action + "':", err);
-        // Tetap sediakan mock fallback agar UI tidak kosong, TAPI status koneksi
-        // di header akan tetap menunjukkan bahwa ini mode offline/demo.
+        console.warn("Koneksi API Cloud bermasalah, menggunakan data lokal:", err);
+        // Jika offline atau belum konek, sediakan mock fallback agar aplikasi tetap responsif
         return fallbackLocalHandler(action, payload);
       }
     }
@@ -1232,8 +959,6 @@
     async function checkBackendConnection() {
       const statusText = document.getElementById('conn-status-text');
       statusText.innerText = "Menghubungkan...";
-      window.lastBackendError = null;
-
       try {
         const [prodList, custList, debtList, repList] = await Promise.all([
           callBackend('getProducts'),
@@ -1254,21 +979,9 @@
         renderDebtTable();
         renderReports();
 
-        if (window.lastBackendError) {
-          // callBackend jatuh ke fallbackLocalHandler tanpa melempar exception,
-          // jadi baris data di atas terisi tapi datanya adalah DATA CONTOH, bukan
-          // data asli dari Spreadsheet.
-          statusText.innerText = "⚠ Mode Offline (Data Contoh)";
-          statusText.title = window.lastBackendError;
-          showToast("Gagal konek ke Spreadsheet: " + window.lastBackendError, "error");
-        } else {
-          statusText.innerText = "Tersambung ke Cloud";
-          statusText.title = "";
-        }
+        statusText.innerText = "Tersambung ke Cloud";
       } catch (e) {
-        statusText.innerText = "⚠ Mode Offline / Standalone";
-        statusText.title = e.message || String(e);
-        showToast("Gagal konek ke Spreadsheet: " + (e.message || e), "error");
+        statusText.innerText = "Mode Offline / Standalone";
       }
     }
 
@@ -1560,8 +1273,6 @@
 
     function clearCart() {
       cart = [];
-      const manualInput = document.getElementById('cart-manual-discount-input');
-      if (manualInput) manualInput.value = 0;
       renderCartUI();
     }
 
@@ -1622,55 +1333,14 @@
       updateCartTotals();
     }
 
-    // Tipe diskon manual aktif: 'percent' atau 'amount'
-    let manualDiscountType = 'percent';
-
-    function setManualDiscountType(type) {
-      manualDiscountType = type;
-      const btnPercent = document.getElementById('cart-manual-discount-type-percent');
-      const btnAmount = document.getElementById('cart-manual-discount-type-amount');
-      const input = document.getElementById('cart-manual-discount-input');
-
-      if (type === 'percent') {
-        btnPercent.className = 'px-2 py-1.5 bg-primary-600 text-white';
-        btnAmount.className = 'px-2 py-1.5 bg-slate-50 text-slate-500';
-        input.max = 100;
-        input.placeholder = '0';
-      } else {
-        btnPercent.className = 'px-2 py-1.5 bg-slate-50 text-slate-500';
-        btnAmount.className = 'px-2 py-1.5 bg-primary-600 text-white';
-        input.removeAttribute('max');
-        input.placeholder = '0';
-      }
-      updateCartTotals();
-    }
-
     function updateCartTotals() {
       const subtotal = cart.reduce((acc, item) => acc + (item.HargaJual * item.qty), 0);
       const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
 
-      // 1) Diskon Member (otomatis dari data pelanggan)
+      // Ambil Diskon Member
       const custSelect = document.getElementById('cart-customer-select');
-      const memberPercent = custSelect ? parseFloat(custSelect.options[custSelect.selectedIndex]?.getAttribute('data-diskon') || 0) : 0;
-      const memberDiskonVal = Math.round(subtotal * (memberPercent / 100));
-
-      // 2) Diskon Manual (diinput kasir, bisa % atau Rp langsung)
-      const manualInputEl = document.getElementById('cart-manual-discount-input');
-      const manualInputRaw = parseFloat(manualInputEl.value) || 0;
-      const manualInput = Math.max(0, manualInputRaw);
-      let manualDiskonVal = 0;
-      if (manualDiscountType === 'percent') {
-        const cappedPercent = Math.min(manualInput, 100);
-        manualDiskonVal = Math.round((subtotal - memberDiskonVal) * (cappedPercent / 100));
-      } else {
-        manualDiskonVal = Math.round(manualInput);
-      }
-
-      // Total diskon = member + manual, tidak boleh melebihi subtotal
-      let diskonVal = memberDiskonVal + manualDiskonVal;
-      diskonVal = Math.max(0, Math.min(diskonVal, subtotal));
-
-      const diskonPercentEffective = subtotal > 0 ? Math.round((diskonVal / subtotal) * 1000) / 10 : 0;
+      const diskonPercent = custSelect ? parseFloat(custSelect.options[custSelect.selectedIndex]?.getAttribute('data-diskon') || 0) : 0;
+      const diskonVal = Math.round(subtotal * (diskonPercent / 100));
 
       // PPN 11% Toggle
       const ppnChecked = document.getElementById('cart-ppn-toggle').checked;
@@ -1679,13 +1349,13 @@
       const grandTotal = Math.max(0, subtotal - diskonVal + ppnVal);
 
       document.getElementById('cart-subtotal').innerText = `Rp ${formatRupiah(subtotal)}`;
-      document.getElementById('cart-discount-badge').innerText = `${diskonPercentEffective}%`;
+      document.getElementById('cart-discount-badge').innerText = `${diskonPercent}%`;
       document.getElementById('cart-discount-val').innerText = `- Rp ${formatRupiah(diskonVal)}`;
       document.getElementById('cart-ppn-val').innerText = `Rp ${formatRupiah(ppnVal)}`;
       document.getElementById('cart-grand-total').innerText = `Rp ${formatRupiah(grandTotal)}`;
       document.getElementById('cart-total-qty-badge').innerText = `${totalQty} Item`;
 
-      return { subtotal, diskonVal, memberDiskonVal, manualDiskonVal, ppnVal, grandTotal, totalQty };
+      return { subtotal, diskonVal, ppnVal, grandTotal, totalQty };
     }
 
     /**
@@ -1835,22 +1505,11 @@
     /**
      * Tampilkan Struk Thermal
      */
-    let lastReceiptData = null;
-    let lastReceiptTrxId = null;
-    let lastReceiptTimeText = '';
-
-    function showReceiptModal(data, trxId, originalTimeText) {
-      lastReceiptData = data;
-      lastReceiptTrxId = trxId;
-      lastReceiptTimeText = originalTimeText || new Date().toLocaleString('id-ID');
-
+    function showReceiptModal(data, trxId) {
       document.getElementById('rcpt-trx-id').innerText = trxId;
-      document.getElementById('rcpt-time').innerText = lastReceiptTimeText;
+      document.getElementById('rcpt-time').innerText = new Date().toLocaleString('id-ID');
       document.getElementById('rcpt-cashier').innerText = data.kasir || currentUser.username;
       document.getElementById('rcpt-customer').innerText = data.pelanggan || 'Umum';
-
-      const reprintBadge = document.getElementById('rcpt-reprint-badge');
-      if (reprintBadge) reprintBadge.classList.toggle('hidden', !originalTimeText);
 
       const itemsBox = document.getElementById('rcpt-items-list');
       itemsBox.innerHTML = '';
@@ -1873,86 +1532,10 @@
       document.getElementById('rcpt-ppn').innerText = `Rp ${formatRupiah(data.ppn || 0)}`;
       document.getElementById('rcpt-grand-total').innerText = `Rp ${formatRupiah(data.totalJual)}`;
       document.getElementById('rcpt-method').innerText = data.metodeBayar;
-      document.getElementById('rcpt-cash').innerText = (data.cash === null || data.cash === undefined)
-        ? '-' : `Rp ${formatRupiah(data.cash)}`;
-      document.getElementById('rcpt-change').innerText = (data.cash === null || data.cash === undefined)
-        ? '-' : `Rp ${formatRupiah(data.change || 0)}`;
-
-      // Prefill nomor WA jika pelanggannya member yang punya no HP tersimpan
-      const waInput = document.getElementById('rcpt-wa-number');
-      const cust = customers.find(c => c.id === data.idPelanggan);
-      waInput.value = cust && cust.phone ? cust.phone : '';
+      document.getElementById('rcpt-cash').innerText = `Rp ${formatRupiah(data.cash || data.totalJual)}`;
+      document.getElementById('rcpt-change').innerText = `Rp ${formatRupiah(data.change || 0)}`;
 
       document.getElementById('modal-receipt').classList.remove('hidden');
-    }
-
-    /**
-     * Kirim Struk via WhatsApp (wa.me) sebagai pesan teks terformat
-     */
-    function sendReceiptViaWhatsApp() {
-      if (!lastReceiptData) {
-        showToast("Belum ada struk untuk dikirim.", "error");
-        return;
-      }
-
-      const rawPhone = document.getElementById('rcpt-wa-number').value.trim();
-      if (!rawPhone) {
-        showToast("Isi dulu nomor WhatsApp tujuan.", "error");
-        document.getElementById('rcpt-wa-number').focus();
-        return;
-      }
-
-      // Normalisasi nomor ke format internasional (62xxxxxxxxxx) untuk wa.me
-      let phoneDigits = rawPhone.replace(/[^0-9]/g, '');
-      if (phoneDigits.startsWith('0')) {
-        phoneDigits = '62' + phoneDigits.slice(1);
-      } else if (phoneDigits.startsWith('620')) {
-        phoneDigits = '62' + phoneDigits.slice(3);
-      } else if (!phoneDigits.startsWith('62')) {
-        phoneDigits = '62' + phoneDigits;
-      }
-
-      if (phoneDigits.length < 9) {
-        showToast("Nomor WhatsApp tidak valid.", "error");
-        return;
-      }
-
-      const data = lastReceiptData;
-      const storeName = document.getElementById('rcpt-store-name').innerText;
-      const storeAddr = document.getElementById('rcpt-store-address').innerText;
-
-      const itemLines = (data.items || []).map(item =>
-        `- ${item.nama}\n  ${item.qty} ${item.satuan || 'Unit'} x Rp ${formatRupiah(item.harga)} = Rp ${formatRupiah(item.qty * item.harga)}`
-      ).join('\n');
-
-      const totalSebelumDiskon = data.totalJual + (data.diskon || 0) - (data.ppn || 0);
-
-      const messageLines = [
-        `*${storeName}*`,
-        storeAddr,
-        '',
-        `No. Struk: ${lastReceiptTrxId}`,
-        `Waktu: ${lastReceiptTimeText}`,
-        `Kasir: ${data.kasir || currentUser.username}`,
-        `Pelanggan: ${data.pelanggan || 'Umum'}`,
-        '',
-        'Rincian Belanja:',
-        itemLines,
-        '-----------------------------',
-        `Total: Rp ${formatRupiah(totalSebelumDiskon)}`,
-        `Diskon: - Rp ${formatRupiah(data.diskon || 0)}`,
-        `PPN (11%): Rp ${formatRupiah(data.ppn || 0)}`,
-        `*Grand Total: Rp ${formatRupiah(data.totalJual)}*`,
-        `Bayar (${data.metodeBayar}): Rp ${formatRupiah(data.cash || data.totalJual)}`,
-        `Kembali: Rp ${formatRupiah(data.change || 0)}`,
-        '',
-        'Terima kasih atas kunjungan Anda 🙏',
-        'Barang yang dibeli tidak dapat ditukar/dikembalikan.'
-      ];
-
-      const message = messageLines.join('\n');
-      const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, '_blank');
     }
 
     function closeReceiptModal() {
@@ -2094,12 +1677,11 @@
      */
     function renderCustomerSelect() {
       const select = document.getElementById('cart-customer-select');
-      select.innerHTML = `<option value="Umum" data-diskon="0" data-phone="">Pelanggan Umum (Non-Member)</option>`;
+      select.innerHTML = `<option value="Umum" data-diskon="0">Pelanggan Umum (Non-Member)</option>`;
       customers.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.setAttribute('data-diskon', c.diskonPercent || 0);
-        opt.setAttribute('data-phone', c.phone || '');
         opt.text = `${c.nama} (Member Diskon ${c.diskonPercent}%)`;
         select.appendChild(opt);
       });
@@ -2268,109 +1850,19 @@
     /**
      * ==================== TAB 5: LAPORAN PENJUALAN ====================
      */
-
-    // Parse "dd/MM/yyyy HH:mm" (format dari Code.gs) menjadi objek Date
-    function parseReportDate(str) {
-      if (!str) return null;
-      const [datePart, timePart] = str.split(' ');
-      const [dd, mm, yyyy] = (datePart || '').split('/').map(Number);
-      if (!dd || !mm || !yyyy) return null;
-      const [hh, min] = (timePart || '00:00').split(':').map(Number);
-      return new Date(yyyy, mm - 1, dd, hh || 0, min || 0);
-    }
-
-    function toDateInputValue(d) {
-      const pad = n => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    }
-
-    // Preset cepat: hari ini / bulan ini / tahun ini / semua
-    function setReportFilterPreset(preset) {
-      const today = new Date();
-      const fromInput = document.getElementById('report-filter-from');
-      const toInput = document.getElementById('report-filter-to');
-
-      if (preset === 'today') {
-        fromInput.value = toDateInputValue(today);
-        toInput.value = toDateInputValue(today);
-      } else if (preset === 'month') {
-        fromInput.value = toDateInputValue(new Date(today.getFullYear(), today.getMonth(), 1));
-        toInput.value = toDateInputValue(new Date(today.getFullYear(), today.getMonth() + 1, 0));
-      } else if (preset === 'year') {
-        fromInput.value = toDateInputValue(new Date(today.getFullYear(), 0, 1));
-        toInput.value = toDateInputValue(new Date(today.getFullYear(), 11, 31));
-      } else {
-        fromInput.value = '';
-        toInput.value = '';
-      }
-      renderReports();
-    }
-
-    function onReportFilterChange() {
-      renderReports();
-    }
-
-    // Ambil data laporan yang sudah difilter sesuai rentang tanggal terpilih
-    function getFilteredReports() {
-      // Kasir hanya boleh melihat transaksi HARI INI, apapun isi input filter-nya
-      // (panel filter juga disembunyikan untuk role ini, lihat applyReportRoleRestriction()).
-      if (currentUser && currentUser.role === 'Kasir') {
-        const today = new Date();
-        const fromDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-        const toDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-        return reports.filter(r => {
-          const d = parseReportDate(r[1]);
-          if (!d) return false;
-          return d >= fromDate && d <= toDate;
-        });
-      }
-
-      const fromVal = document.getElementById('report-filter-from')?.value;
-      const toVal = document.getElementById('report-filter-to')?.value;
-      if (!fromVal && !toVal) return reports;
-
-      const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-      const toDate = toVal ? new Date(toVal + 'T23:59:59') : null;
-
-      return reports.filter(r => {
-        const d = parseReportDate(r[1]);
-        if (!d) return true;
-        if (fromDate && d < fromDate) return false;
-        if (toDate && d > toDate) return false;
-        return true;
-      });
-    }
-
-    // Sembunyikan panel filter tanggal & tombol export untuk role Kasir (hanya boleh lihat hari ini)
-    function applyReportRoleRestriction() {
-      const filterBar = document.getElementById('report-filter-bar');
-      const exportBtn = document.getElementById('report-export-btn');
-      const isKasir = currentUser && currentUser.role === 'Kasir';
-      if (filterBar) filterBar.classList.toggle('hidden', isKasir);
-      if (exportBtn) exportBtn.classList.toggle('hidden', isKasir);
-    }
-
     function renderReports() {
-      applyReportRoleRestriction();
       const tbody = document.getElementById('report-table-body');
       tbody.innerHTML = '';
 
-      const filtered = getFilteredReports();
-
       let totalOmzet = 0;
       let totalLaba = 0;
-      let totalDiskon = 0;
 
-      filtered.forEach((r, idx) => {
+      reports.forEach(r => {
         // [trxId, waktu, pelanggan, kasir, items, totalJual, laba, diskon, ppn, metode]
         const totalJual = parseFloat(r[5] || 0);
         const laba = parseFloat(r[6] || 0);
-        const diskon = parseFloat(r[7] || 0);
         totalOmzet += totalJual;
         totalLaba += laba;
-        totalDiskon += diskon;
-
-        const originalIndex = reports.indexOf(r);
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
@@ -2383,119 +1875,28 @@
           <td class="p-2.5 text-right font-black text-slate-900">Rp ${formatRupiah(totalJual)}</td>
           <td class="p-2.5 text-right font-bold text-emerald-600">Rp ${formatRupiah(laba)}</td>
           <td class="p-2.5"><span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">${r[9] || 'Tunai'}</span></td>
-          <td class="p-2.5 text-center">
-            <button onclick="reprintReceiptFromReport(${originalIndex})" title="Cetak Ulang Struk"
-              class="text-primary-600 hover:text-primary-800 bg-primary-50 hover:bg-primary-100 w-8 h-8 rounded-lg inline-flex items-center justify-center">
-              <i class="fa-solid fa-receipt"></i>
-            </button>
-          </td>
         `;
         tbody.appendChild(tr);
       });
 
       document.getElementById('report-omzet').innerText = `Rp ${formatRupiah(totalOmzet)}`;
       document.getElementById('report-laba').innerText = `Rp ${formatRupiah(totalLaba)}`;
-      document.getElementById('report-count').innerText = filtered.length;
-
-      const fromVal = document.getElementById('report-filter-from')?.value;
-      const toVal = document.getElementById('report-filter-to')?.value;
-      const filterSummary = document.getElementById('report-filter-summary');
-      if (currentUser && currentUser.role === 'Kasir') {
-        filterSummary.innerText = `Menampilkan transaksi hari ini (${filtered.length})`;
-      } else if (fromVal || toVal) {
-        filterSummary.innerText = `Periode: ${fromVal || '...'} s/d ${toVal || '...'} · ${filtered.length} transaksi`;
-      } else {
-        filterSummary.innerText = `Menampilkan semua transaksi (${filtered.length})`;
-      }
-    }
-
-    // Cetak ulang struk dari salah satu baris riwayat penjualan.
-    // Catatan: nominal "Bayar" & "Kembali" tidak disimpan per-item di sheet Transaksi,
-    // jadi pada struk cetak ulang kedua nilai itu ditampilkan sesuai Grand Total (tanpa kembalian).
-    function reprintReceiptFromReport(index) {
-      const r = reports[index];
-      if (!r) return;
-
-      // Parse ulang string rincian item, mis: "BERAS SPHP 5 KG (5Kg x 60000), TELUR (2Kg x 28000)"
-      const itemRegex = /^(.*)\s\(([\d.,]+)\s*([a-zA-Z%]*)\s*x\s*([\d.,]+)\)$/;
-      const items = (r[4] || '').split(', ').map(str => {
-        const m = str.trim().match(itemRegex);
-        if (!m) return { nama: str.trim(), qty: 1, satuan: '', harga: 0 };
-        return {
-          nama: m[1].trim(),
-          qty: parseFloat(m[2].replace(',', '.')) || 1,
-          satuan: m[3] || '',
-          harga: parseFloat(m[4].replace(/\./g, '')) || 0
-        };
-      });
-
-      const data = {
-        trxId: r[0],
-        pelanggan: r[2],
-        idPelanggan: null,
-        kasir: r[3],
-        items: items,
-        totalJual: parseFloat(r[5] || 0),
-        diskon: parseFloat(r[7] || 0),
-        ppn: parseFloat(r[8] || 0),
-        metodeBayar: r[9] || 'Tunai',
-        cash: null,   // tidak tersimpan per-transaksi, lihat catatan di atas
-        change: 0
-      };
-
-      showReceiptModal(data, r[0], r[1]);
-      showToast("Struk cetak ulang dimuat");
+      document.getElementById('report-count').innerText = reports.length;
     }
 
     function exportReportToExcel() {
-      if (currentUser && currentUser.role === 'Kasir') {
-        showToast("Download Excel hanya tersedia untuk Admin.", "error");
+      if (reports.length === 0) {
+        showToast("Belum ada data riwayat penjualan", "error");
         return;
       }
-      const filtered = getFilteredReports();
-      if (filtered.length === 0) {
-        showToast("Belum ada data riwayat penjualan pada periode ini", "error");
-        return;
-      }
-
-      let totalOmzet = 0, totalLaba = 0, totalDiskon = 0, totalPpn = 0;
-      filtered.forEach(r => {
-        totalOmzet += parseFloat(r[5] || 0);
-        totalLaba += parseFloat(r[6] || 0);
-        totalDiskon += parseFloat(r[7] || 0);
-        totalPpn += parseFloat(r[8] || 0);
-      });
-
-      const fromVal = document.getElementById('report-filter-from')?.value;
-      const toVal = document.getElementById('report-filter-to')?.value;
-      const isKasir = currentUser && currentUser.role === 'Kasir';
-      const todayStr = new Date().toISOString().split('T')[0];
-      const periodeLabel = isKasir ? `Hari Ini (${todayStr})` : ((fromVal || toVal) ? `${fromVal || '...'} s/d ${toVal || '...'}` : 'Semua Periode');
-
       const data = [
-        ["LAPORAN PENJUALAN"],
-        ["Periode", periodeLabel],
-        ["Total Omzet", totalOmzet],
-        ["Laba Bersih", totalLaba],
-        ["Total Diskon", totalDiskon],
-        ["Total PPN", totalPpn],
-        ["Jumlah Transaksi", filtered.length],
-        [],
         ["ID Transaksi", "Waktu", "Pelanggan", "Kasir", "Detail Barang", "Total Jual", "Laba", "Diskon", "PPN", "Metode"],
-        ...filtered,
-        [],
-        ["", "", "", "", "TOTAL", totalOmzet, totalLaba, totalDiskon, totalPpn, ""]
+        ...reports
       ];
-
       const ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = [
-        { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 34 },
-        { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 14 }
-      ];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Penjualan");
-      const fileSuffix = isKasir ? `hari-ini_${todayStr}` : ((fromVal || toVal) ? `${fromVal || 'awal'}_sd_${toVal || 'akhir'}` : todayStr);
-      XLSX.writeFile(wb, `Laporan_Penjualan_${fileSuffix}.xlsx`);
+      XLSX.writeFile(wb, `Laporan_Penjualan_${new Date().toISOString().split('T')[0]}.xlsx`);
       showToast("File Excel berhasil diunduh!");
     }
 
@@ -2504,9 +1905,9 @@
      */
     function loadLocalSettings() {
       const url = localStorage.getItem('gas_api_url') || DEFAULT_GAS_URL;
-      const storeName = localStorage.getItem('store_name') || 'SMART KASIR KKMP 16 ULU';
-      const storeAddr = localStorage.getItem('store_address') || 'Griya Parasjaya E23 Palembang';
-      const storePhone = localStorage.getItem('store_phone') || '082370730000';
+      const storeName = localStorage.getItem('store_name') || 'SMART KASIR POS';
+      const storeAddr = localStorage.getItem('store_address') || 'Palembang, Indonesia';
+      const storePhone = localStorage.getItem('store_phone') || '0812-3456-7890';
 
       document.getElementById('cfg-gas-url').value = url;
       document.getElementById('cfg-store-name').value = storeName;
@@ -2535,7 +1936,7 @@
       const phone = document.getElementById('cfg-store-phone').value.trim();
 
       localStorage.setItem('gas_api_url', url || DEFAULT_GAS_URL);
-      localStorage.setItem('store_name', name || 'SMART KASIR KKMP 16 ULU');
+      localStorage.setItem('store_name', name || 'SMART KASIR POS');
       localStorage.setItem('store_address', addr);
       localStorage.setItem('store_phone', phone);
 
@@ -2562,14 +1963,14 @@
     }
 
     function handleLogout() {
-      if (confirm("Yakin ingin keluar dari sistem?")) {
-        localStorage.removeItem('pos_current_user');
-        currentUser = null;
-        cart = [];
-        document.getElementById('login-username').value = '';
-        document.getElementById('login-password').value = '';
-        hideLoginError();
-        showLoginScreen();
+      if (confirm("Ingin beralih peran atau keluar kasir?")) {
+        const role = currentUser.role === 'Admin' ? 'Kasir' : 'Admin';
+        currentUser = { username: role.toLowerCase(), role: role };
+        document.getElementById('user-name-display').innerText = currentUser.username;
+        document.getElementById('user-role-display').innerText = currentUser.role;
+        document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
+        showToast(`Beralih ke mode ${currentUser.role}`);
+        checkBackendConnection();
       }
     }
 
