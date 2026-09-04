@@ -452,6 +452,30 @@
 
     <!-- TAB 5: LAPORAN PENJUALAN -->
     <div id="view-laporan" class="tab-view hidden space-y-4">
+
+      <!-- Filter Periode: Tanggal / Bulan / Tahun -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
+        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Dari Tanggal</label>
+            <input type="date" id="report-filter-from" onchange="onReportFilterChange()"
+              class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sampai Tanggal</label>
+            <input type="date" id="report-filter-to" onchange="onReportFilterChange()"
+              class="bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="setReportFilterPreset('today')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Hari Ini</button>
+            <button onclick="setReportFilterPreset('month')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Bulan Ini</button>
+            <button onclick="setReportFilterPreset('year')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Tahun Ini</button>
+            <button onclick="setReportFilterPreset('all')" class="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Semua</button>
+          </div>
+          <div class="sm:ml-auto text-[11px] text-slate-400" id="report-filter-summary"></div>
+        </div>
+      </div>
+
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
@@ -496,6 +520,7 @@
                 <th class="p-2.5 text-right">Total Jual</th>
                 <th class="p-2.5 text-right">Laba</th>
                 <th class="p-2.5">Metode</th>
+                <th class="p-2.5 text-center">Struk</th>
               </tr>
             </thead>
             <tbody id="report-table-body" class="divide-y divide-slate-100">
@@ -506,7 +531,7 @@
       </div>
     </div>
 
-  </main>
+    </main>
 
   <!-- ==================== MODAL 1: SCANNER KAMERA BARCODE (HTML5-QRCODE) ==================== -->
   <div id="modal-scanner" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -642,7 +667,10 @@
   <div id="modal-receipt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
       <div class="flex justify-between items-center mb-3">
-        <h3 class="text-sm font-bold text-slate-900">Struk Pembayaran</h3>
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          Struk Pembayaran
+          <span id="rcpt-reprint-badge" class="hidden text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">CETAK ULANG</span>
+        </h3>
         <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
@@ -1810,15 +1838,18 @@
     let lastReceiptTrxId = null;
     let lastReceiptTimeText = '';
 
-    function showReceiptModal(data, trxId) {
+    function showReceiptModal(data, trxId, originalTimeText) {
       lastReceiptData = data;
       lastReceiptTrxId = trxId;
-      lastReceiptTimeText = new Date().toLocaleString('id-ID');
+      lastReceiptTimeText = originalTimeText || new Date().toLocaleString('id-ID');
 
       document.getElementById('rcpt-trx-id').innerText = trxId;
       document.getElementById('rcpt-time').innerText = lastReceiptTimeText;
       document.getElementById('rcpt-cashier').innerText = data.kasir || currentUser.username;
       document.getElementById('rcpt-customer').innerText = data.pelanggan || 'Umum';
+
+      const reprintBadge = document.getElementById('rcpt-reprint-badge');
+      if (reprintBadge) reprintBadge.classList.toggle('hidden', !originalTimeText);
 
       const itemsBox = document.getElementById('rcpt-items-list');
       itemsBox.innerHTML = '';
@@ -1841,8 +1872,10 @@
       document.getElementById('rcpt-ppn').innerText = `Rp ${formatRupiah(data.ppn || 0)}`;
       document.getElementById('rcpt-grand-total').innerText = `Rp ${formatRupiah(data.totalJual)}`;
       document.getElementById('rcpt-method').innerText = data.metodeBayar;
-      document.getElementById('rcpt-cash').innerText = `Rp ${formatRupiah(data.cash || data.totalJual)}`;
-      document.getElementById('rcpt-change').innerText = `Rp ${formatRupiah(data.change || 0)}`;
+      document.getElementById('rcpt-cash').innerText = (data.cash === null || data.cash === undefined)
+        ? '-' : `Rp ${formatRupiah(data.cash)}`;
+      document.getElementById('rcpt-change').innerText = (data.cash === null || data.cash === undefined)
+        ? '-' : `Rp ${formatRupiah(data.change || 0)}`;
 
       // Prefill nomor WA jika pelanggannya member yang punya no HP tersimpan
       const waInput = document.getElementById('rcpt-wa-number');
@@ -2234,19 +2267,86 @@
     /**
      * ==================== TAB 5: LAPORAN PENJUALAN ====================
      */
+
+    // Parse "dd/MM/yyyy HH:mm" (format dari Code.gs) menjadi objek Date
+    function parseReportDate(str) {
+      if (!str) return null;
+      const [datePart, timePart] = str.split(' ');
+      const [dd, mm, yyyy] = (datePart || '').split('/').map(Number);
+      if (!dd || !mm || !yyyy) return null;
+      const [hh, min] = (timePart || '00:00').split(':').map(Number);
+      return new Date(yyyy, mm - 1, dd, hh || 0, min || 0);
+    }
+
+    function toDateInputValue(d) {
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    // Preset cepat: hari ini / bulan ini / tahun ini / semua
+    function setReportFilterPreset(preset) {
+      const today = new Date();
+      const fromInput = document.getElementById('report-filter-from');
+      const toInput = document.getElementById('report-filter-to');
+
+      if (preset === 'today') {
+        fromInput.value = toDateInputValue(today);
+        toInput.value = toDateInputValue(today);
+      } else if (preset === 'month') {
+        fromInput.value = toDateInputValue(new Date(today.getFullYear(), today.getMonth(), 1));
+        toInput.value = toDateInputValue(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+      } else if (preset === 'year') {
+        fromInput.value = toDateInputValue(new Date(today.getFullYear(), 0, 1));
+        toInput.value = toDateInputValue(new Date(today.getFullYear(), 11, 31));
+      } else {
+        fromInput.value = '';
+        toInput.value = '';
+      }
+      renderReports();
+    }
+
+    function onReportFilterChange() {
+      renderReports();
+    }
+
+    // Ambil data laporan yang sudah difilter sesuai rentang tanggal terpilih
+    function getFilteredReports() {
+      const fromVal = document.getElementById('report-filter-from')?.value;
+      const toVal = document.getElementById('report-filter-to')?.value;
+      if (!fromVal && !toVal) return reports;
+
+      const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+      const toDate = toVal ? new Date(toVal + 'T23:59:59') : null;
+
+      return reports.filter(r => {
+        const d = parseReportDate(r[1]);
+        if (!d) return true;
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    }
+
     function renderReports() {
       const tbody = document.getElementById('report-table-body');
       tbody.innerHTML = '';
 
+      const filtered = getFilteredReports();
+
       let totalOmzet = 0;
       let totalLaba = 0;
+      let totalDiskon = 0;
 
-      reports.forEach(r => {
+      filtered.forEach((r, idx) => {
         // [trxId, waktu, pelanggan, kasir, items, totalJual, laba, diskon, ppn, metode]
         const totalJual = parseFloat(r[5] || 0);
         const laba = parseFloat(r[6] || 0);
+        const diskon = parseFloat(r[7] || 0);
         totalOmzet += totalJual;
         totalLaba += laba;
+        totalDiskon += diskon;
+
+        const originalIndex = reports.indexOf(r);
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
@@ -2259,28 +2359,111 @@
           <td class="p-2.5 text-right font-black text-slate-900">Rp ${formatRupiah(totalJual)}</td>
           <td class="p-2.5 text-right font-bold text-emerald-600">Rp ${formatRupiah(laba)}</td>
           <td class="p-2.5"><span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">${r[9] || 'Tunai'}</span></td>
+          <td class="p-2.5 text-center">
+            <button onclick="reprintReceiptFromReport(${originalIndex})" title="Cetak Ulang Struk"
+              class="text-primary-600 hover:text-primary-800 bg-primary-50 hover:bg-primary-100 w-8 h-8 rounded-lg inline-flex items-center justify-center">
+              <i class="fa-solid fa-receipt"></i>
+            </button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
 
       document.getElementById('report-omzet').innerText = `Rp ${formatRupiah(totalOmzet)}`;
       document.getElementById('report-laba').innerText = `Rp ${formatRupiah(totalLaba)}`;
-      document.getElementById('report-count').innerText = reports.length;
+      document.getElementById('report-count').innerText = filtered.length;
+
+      const fromVal = document.getElementById('report-filter-from')?.value;
+      const toVal = document.getElementById('report-filter-to')?.value;
+      const filterSummary = document.getElementById('report-filter-summary');
+      if (fromVal || toVal) {
+        filterSummary.innerText = `Periode: ${fromVal || '...'} s/d ${toVal || '...'} · ${filtered.length} transaksi`;
+      } else {
+        filterSummary.innerText = `Menampilkan semua transaksi (${filtered.length})`;
+      }
+    }
+
+    // Cetak ulang struk dari salah satu baris riwayat penjualan.
+    // Catatan: nominal "Bayar" & "Kembali" tidak disimpan per-item di sheet Transaksi,
+    // jadi pada struk cetak ulang kedua nilai itu ditampilkan sesuai Grand Total (tanpa kembalian).
+    function reprintReceiptFromReport(index) {
+      const r = reports[index];
+      if (!r) return;
+
+      // Parse ulang string rincian item, mis: "BERAS SPHP 5 KG (5Kg x 60000), TELUR (2Kg x 28000)"
+      const itemRegex = /^(.*)\s\(([\d.,]+)\s*([a-zA-Z%]*)\s*x\s*([\d.,]+)\)$/;
+      const items = (r[4] || '').split(', ').map(str => {
+        const m = str.trim().match(itemRegex);
+        if (!m) return { nama: str.trim(), qty: 1, satuan: '', harga: 0 };
+        return {
+          nama: m[1].trim(),
+          qty: parseFloat(m[2].replace(',', '.')) || 1,
+          satuan: m[3] || '',
+          harga: parseFloat(m[4].replace(/\./g, '')) || 0
+        };
+      });
+
+      const data = {
+        trxId: r[0],
+        pelanggan: r[2],
+        idPelanggan: null,
+        kasir: r[3],
+        items: items,
+        totalJual: parseFloat(r[5] || 0),
+        diskon: parseFloat(r[7] || 0),
+        ppn: parseFloat(r[8] || 0),
+        metodeBayar: r[9] || 'Tunai',
+        cash: null,   // tidak tersimpan per-transaksi, lihat catatan di atas
+        change: 0
+      };
+
+      showReceiptModal(data, r[0], r[1]);
+      showToast("Struk cetak ulang dimuat");
     }
 
     function exportReportToExcel() {
-      if (reports.length === 0) {
-        showToast("Belum ada data riwayat penjualan", "error");
+      const filtered = getFilteredReports();
+      if (filtered.length === 0) {
+        showToast("Belum ada data riwayat penjualan pada periode ini", "error");
         return;
       }
+
+      let totalOmzet = 0, totalLaba = 0, totalDiskon = 0, totalPpn = 0;
+      filtered.forEach(r => {
+        totalOmzet += parseFloat(r[5] || 0);
+        totalLaba += parseFloat(r[6] || 0);
+        totalDiskon += parseFloat(r[7] || 0);
+        totalPpn += parseFloat(r[8] || 0);
+      });
+
+      const fromVal = document.getElementById('report-filter-from')?.value;
+      const toVal = document.getElementById('report-filter-to')?.value;
+      const periodeLabel = (fromVal || toVal) ? `${fromVal || '...'} s/d ${toVal || '...'}` : 'Semua Periode';
+
       const data = [
+        ["LAPORAN PENJUALAN"],
+        ["Periode", periodeLabel],
+        ["Total Omzet", totalOmzet],
+        ["Laba Bersih", totalLaba],
+        ["Total Diskon", totalDiskon],
+        ["Total PPN", totalPpn],
+        ["Jumlah Transaksi", filtered.length],
+        [],
         ["ID Transaksi", "Waktu", "Pelanggan", "Kasir", "Detail Barang", "Total Jual", "Laba", "Diskon", "PPN", "Metode"],
-        ...reports
+        ...filtered,
+        [],
+        ["", "", "", "", "TOTAL", totalOmzet, totalLaba, totalDiskon, totalPpn, ""]
       ];
+
       const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [
+        { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 34 },
+        { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 14 }
+      ];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Penjualan");
-      XLSX.writeFile(wb, `Laporan_Penjualan_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const fileSuffix = (fromVal || toVal) ? `${fromVal || 'awal'}_sd_${toVal || 'akhir'}` : new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `Laporan_Penjualan_${fileSuffix}.xlsx`);
       showToast("File Excel berhasil diunduh!");
     }
 
