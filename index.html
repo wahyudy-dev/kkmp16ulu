@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SMART KASIR POS - Scan Barcode & Inventory</title>
+  <title>SMART KASIR KKMP 16 ULU - Scan Barcode & Inventory</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -85,7 +85,7 @@
         <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/30 mb-3">
           <i class="fa-solid fa-cash-register text-2xl"></i>
         </div>
-        <h1 class="text-lg font-bold text-slate-900" id="login-store-name">SMART KASIR POS</h1>
+        <h1 class="text-lg font-bold text-slate-900" id="login-store-name">SMART KASIR KKMP 16 ULU</h1>
         <p class="text-xs text-slate-500 mt-1">Silakan login untuk masuk ke sistem</p>
       </div>
 
@@ -143,7 +143,7 @@
           <i class="fa-solid fa-cash-register text-lg"></i>
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-bold leading-tight tracking-tight text-slate-900" id="brand-store-name">SMART KASIR POS</h1>
+          <h1 class="text-base sm:text-lg font-bold leading-tight tracking-tight text-slate-900" id="brand-store-name">SMART KASIR KKMP 16 ULU</h1>
           <p class="text-xs text-slate-500 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="conn-status-text">Tersambung ke Cloud</span>
@@ -677,9 +677,9 @@
       <!-- Preview Struk Kertas Kasir (58mm) -->
       <div class="flex-1 overflow-y-auto bg-slate-50 p-4 border border-slate-200 rounded-xl font-mono text-[11px] leading-relaxed select-text" id="printable-receipt">
         <div class="text-center pb-2 border-b border-dashed border-slate-400 mb-2">
-          <p class="font-bold text-xs uppercase" id="rcpt-store-name">SMART KASIR POS</p>
-          <p class="text-[10px] text-slate-500" id="rcpt-store-address">Palembang, Indonesia</p>
-          <p class="text-[10px] text-slate-500" id="rcpt-store-phone">WA: 0812-3456-7890</p>
+          <p class="font-bold text-xs uppercase" id="rcpt-store-name">SMART KASIR KKMP 16 ULU</p>
+          <p class="text-[10px] text-slate-500" id="rcpt-store-address">Griys Parasjaya E23, Palembang</p>
+          <p class="text-[10px] text-slate-500" id="rcpt-store-phone">WA: 082370730000</p>
         </div>
 
         <div class="pb-2 border-b border-dashed border-slate-400 mb-2 space-y-0.5 text-[10px]">
@@ -947,7 +947,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadLocalSettings();
       document.getElementById('login-store-name').innerText =
-        localStorage.getItem('store_name') || 'SMART KASIR POS';
+        localStorage.getItem('store_name') || 'SMART KASIR KKMP 16 ULU';
       checkExistingSession();
     });
 
@@ -2504,9 +2504,9 @@
      */
     function loadLocalSettings() {
       const url = localStorage.getItem('gas_api_url') || DEFAULT_GAS_URL;
-      const storeName = localStorage.getItem('store_name') || 'SMART KASIR POS';
-      const storeAddr = localStorage.getItem('store_address') || 'Palembang, Indonesia';
-      const storePhone = localStorage.getItem('store_phone') || '0812-3456-7890';
+      const storeName = localStorage.getItem('store_name') || 'SMART KASIR KKMP 16 ULU';
+      const storeAddr = localStorage.getItem('store_address') || 'Griya Parasjaya E23 Palembang';
+      const storePhone = localStorage.getItem('store_phone') || '082370730000';
 
       document.getElementById('cfg-gas-url').value = url;
       document.getElementById('cfg-store-name').value = storeName;
@@ -2535,7 +2535,7 @@
       const phone = document.getElementById('cfg-store-phone').value.trim();
 
       localStorage.setItem('gas_api_url', url || DEFAULT_GAS_URL);
-      localStorage.setItem('store_name', name || 'SMART KASIR POS');
+      localStorage.setItem('store_name', name || 'SMART KASIR KKMP 16 ULU');
       localStorage.setItem('store_address', addr);
       localStorage.setItem('store_phone', phone);
 
