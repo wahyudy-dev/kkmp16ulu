@@ -281,9 +281,28 @@
                 <span>Subtotal</span>
                 <span id="cart-subtotal" class="font-semibold text-slate-800">Rp 0</span>
               </div>
+
+              <!-- Input Diskon Manual (Rp atau %) -->
+              <div class="flex items-center justify-between gap-2 text-slate-500">
+                <span class="flex items-center gap-1 whitespace-nowrap">
+                  <i class="fa-solid fa-tag text-[11px]"></i> Diskon Manual
+                </span>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="cart-manual-discount-input" min="0" step="any" value="0"
+                    oninput="updateCartTotals()" placeholder="0"
+                    class="w-20 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                  <div class="flex rounded-lg border border-slate-200 overflow-hidden text-[10px] font-bold">
+                    <button type="button" id="cart-manual-discount-type-percent" onclick="setManualDiscountType('percent')"
+                      class="px-2 py-1.5 bg-primary-600 text-white">%</button>
+                    <button type="button" id="cart-manual-discount-type-amount" onclick="setManualDiscountType('amount')"
+                      class="px-2 py-1.5 bg-slate-50 text-slate-500">Rp</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="flex justify-between text-slate-500 items-center">
                 <span class="flex items-center gap-1">
-                  Diskon
+                  Total Diskon
                   <span id="cart-discount-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">0%</span>
                 </span>
                 <span id="cart-discount-val" class="font-semibold text-emerald-600">- Rp 0</span>
@@ -1499,6 +1518,8 @@
 
     function clearCart() {
       cart = [];
+      const manualInput = document.getElementById('cart-manual-discount-input');
+      if (manualInput) manualInput.value = 0;
       renderCartUI();
     }
 
@@ -1559,14 +1580,55 @@
       updateCartTotals();
     }
 
+    // Tipe diskon manual aktif: 'percent' atau 'amount'
+    let manualDiscountType = 'percent';
+
+    function setManualDiscountType(type) {
+      manualDiscountType = type;
+      const btnPercent = document.getElementById('cart-manual-discount-type-percent');
+      const btnAmount = document.getElementById('cart-manual-discount-type-amount');
+      const input = document.getElementById('cart-manual-discount-input');
+
+      if (type === 'percent') {
+        btnPercent.className = 'px-2 py-1.5 bg-primary-600 text-white';
+        btnAmount.className = 'px-2 py-1.5 bg-slate-50 text-slate-500';
+        input.max = 100;
+        input.placeholder = '0';
+      } else {
+        btnPercent.className = 'px-2 py-1.5 bg-slate-50 text-slate-500';
+        btnAmount.className = 'px-2 py-1.5 bg-primary-600 text-white';
+        input.removeAttribute('max');
+        input.placeholder = '0';
+      }
+      updateCartTotals();
+    }
+
     function updateCartTotals() {
       const subtotal = cart.reduce((acc, item) => acc + (item.HargaJual * item.qty), 0);
       const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
 
-      // Ambil Diskon Member
+      // 1) Diskon Member (otomatis dari data pelanggan)
       const custSelect = document.getElementById('cart-customer-select');
-      const diskonPercent = custSelect ? parseFloat(custSelect.options[custSelect.selectedIndex]?.getAttribute('data-diskon') || 0) : 0;
-      const diskonVal = Math.round(subtotal * (diskonPercent / 100));
+      const memberPercent = custSelect ? parseFloat(custSelect.options[custSelect.selectedIndex]?.getAttribute('data-diskon') || 0) : 0;
+      const memberDiskonVal = Math.round(subtotal * (memberPercent / 100));
+
+      // 2) Diskon Manual (diinput kasir, bisa % atau Rp langsung)
+      const manualInputEl = document.getElementById('cart-manual-discount-input');
+      const manualInputRaw = parseFloat(manualInputEl.value) || 0;
+      const manualInput = Math.max(0, manualInputRaw);
+      let manualDiskonVal = 0;
+      if (manualDiscountType === 'percent') {
+        const cappedPercent = Math.min(manualInput, 100);
+        manualDiskonVal = Math.round((subtotal - memberDiskonVal) * (cappedPercent / 100));
+      } else {
+        manualDiskonVal = Math.round(manualInput);
+      }
+
+      // Total diskon = member + manual, tidak boleh melebihi subtotal
+      let diskonVal = memberDiskonVal + manualDiskonVal;
+      diskonVal = Math.max(0, Math.min(diskonVal, subtotal));
+
+      const diskonPercentEffective = subtotal > 0 ? Math.round((diskonVal / subtotal) * 1000) / 10 : 0;
 
       // PPN 11% Toggle
       const ppnChecked = document.getElementById('cart-ppn-toggle').checked;
@@ -1575,13 +1637,13 @@
       const grandTotal = Math.max(0, subtotal - diskonVal + ppnVal);
 
       document.getElementById('cart-subtotal').innerText = `Rp ${formatRupiah(subtotal)}`;
-      document.getElementById('cart-discount-badge').innerText = `${diskonPercent}%`;
+      document.getElementById('cart-discount-badge').innerText = `${diskonPercentEffective}%`;
       document.getElementById('cart-discount-val').innerText = `- Rp ${formatRupiah(diskonVal)}`;
       document.getElementById('cart-ppn-val').innerText = `Rp ${formatRupiah(ppnVal)}`;
       document.getElementById('cart-grand-total').innerText = `Rp ${formatRupiah(grandTotal)}`;
       document.getElementById('cart-total-qty-badge').innerText = `${totalQty} Item`;
 
-      return { subtotal, diskonVal, ppnVal, grandTotal, totalQty };
+      return { subtotal, diskonVal, memberDiskonVal, manualDiskonVal, ppnVal, grandTotal, totalQty };
     }
 
     /**
