@@ -453,8 +453,8 @@
     <!-- TAB 5: LAPORAN PENJUALAN -->
     <div id="view-laporan" class="tab-view hidden space-y-4">
 
-      <!-- Filter Periode: Tanggal / Bulan / Tahun -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
+      <!-- Filter Periode: Tanggal / Bulan / Tahun (khusus Admin) -->
+      <div id="report-filter-bar" class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
         <div class="flex flex-col sm:flex-row sm:items-end gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Dari Tanggal</label>
@@ -1071,6 +1071,7 @@
 
       initPhysicalBarcodeScanner();
       renderCartUI();
+      applyReportRoleRestriction();
       checkBackendConnection();
     }
 
@@ -2311,6 +2312,19 @@
 
     // Ambil data laporan yang sudah difilter sesuai rentang tanggal terpilih
     function getFilteredReports() {
+      // Kasir hanya boleh melihat transaksi HARI INI, apapun isi input filter-nya
+      // (panel filter juga disembunyikan untuk role ini, lihat applyReportRoleRestriction()).
+      if (currentUser && currentUser.role === 'Kasir') {
+        const today = new Date();
+        const fromDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+        const toDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        return reports.filter(r => {
+          const d = parseReportDate(r[1]);
+          if (!d) return false;
+          return d >= fromDate && d <= toDate;
+        });
+      }
+
       const fromVal = document.getElementById('report-filter-from')?.value;
       const toVal = document.getElementById('report-filter-to')?.value;
       if (!fromVal && !toVal) return reports;
@@ -2327,7 +2341,16 @@
       });
     }
 
+    // Sembunyikan panel filter tanggal untuk role Kasir (hanya boleh lihat hari ini)
+    function applyReportRoleRestriction() {
+      const filterBar = document.getElementById('report-filter-bar');
+      if (!filterBar) return;
+      const isKasir = currentUser && currentUser.role === 'Kasir';
+      filterBar.classList.toggle('hidden', isKasir);
+    }
+
     function renderReports() {
+      applyReportRoleRestriction();
       const tbody = document.getElementById('report-table-body');
       tbody.innerHTML = '';
 
@@ -2376,7 +2399,9 @@
       const fromVal = document.getElementById('report-filter-from')?.value;
       const toVal = document.getElementById('report-filter-to')?.value;
       const filterSummary = document.getElementById('report-filter-summary');
-      if (fromVal || toVal) {
+      if (currentUser && currentUser.role === 'Kasir') {
+        filterSummary.innerText = `Menampilkan transaksi hari ini (${filtered.length})`;
+      } else if (fromVal || toVal) {
         filterSummary.innerText = `Periode: ${fromVal || '...'} s/d ${toVal || '...'} · ${filtered.length} transaksi`;
       } else {
         filterSummary.innerText = `Menampilkan semua transaksi (${filtered.length})`;
@@ -2438,7 +2463,9 @@
 
       const fromVal = document.getElementById('report-filter-from')?.value;
       const toVal = document.getElementById('report-filter-to')?.value;
-      const periodeLabel = (fromVal || toVal) ? `${fromVal || '...'} s/d ${toVal || '...'}` : 'Semua Periode';
+      const isKasir = currentUser && currentUser.role === 'Kasir';
+      const todayStr = new Date().toISOString().split('T')[0];
+      const periodeLabel = isKasir ? `Hari Ini (${todayStr})` : ((fromVal || toVal) ? `${fromVal || '...'} s/d ${toVal || '...'}` : 'Semua Periode');
 
       const data = [
         ["LAPORAN PENJUALAN"],
@@ -2462,7 +2489,7 @@
       ];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Penjualan");
-      const fileSuffix = (fromVal || toVal) ? `${fromVal || 'awal'}_sd_${toVal || 'akhir'}` : new Date().toISOString().split('T')[0];
+      const fileSuffix = isKasir ? `hari-ini_${todayStr}` : ((fromVal || toVal) ? `${fromVal || 'awal'}_sd_${toVal || 'akhir'}` : todayStr);
       XLSX.writeFile(wb, `Laporan_Penjualan_${fileSuffix}.xlsx`);
       showToast("File Excel berhasil diunduh!");
     }
