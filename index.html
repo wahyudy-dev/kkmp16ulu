@@ -227,10 +227,18 @@
               </div>
               <div class="flex justify-between text-slate-500 items-center">
                 <span class="flex items-center gap-1">
-                  Diskon
+                  Diskon Member
                   <span id="cart-discount-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">0%</span>
                 </span>
                 <span id="cart-discount-val" class="font-semibold text-emerald-600">- Rp 0</span>
+              </div>
+              <div class="flex justify-between text-slate-500 items-center">
+                <button onclick="openManualDiscountModal()" class="flex items-center gap-1.5 text-slate-500 hover:text-primary-600 transition">
+                  <span>Diskon Manual</span>
+                  <span id="cart-manual-discount-badge" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-bold">Atur</span>
+                  <i class="fa-solid fa-pen text-[9px] text-slate-400"></i>
+                </button>
+                <span id="cart-manual-discount-val" class="font-semibold text-emerald-600">- Rp 0</span>
               </div>
               <div class="flex justify-between text-slate-500 items-center">
                 <label class="flex items-center gap-1.5 cursor-pointer">
@@ -563,6 +571,56 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: DISKON MANUAL (PERSEN / NOMINAL) ==================== -->
+  <div id="modal-manual-discount" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Diskon Manual</h3>
+          <p class="text-xs text-slate-500">Potongan tambahan di luar diskon member</p>
+        </div>
+        <button onclick="closeManualDiscountModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Pilihan Jenis Diskon -->
+      <div class="grid grid-cols-2 gap-2 mb-4 text-xs font-bold">
+        <button onclick="setManualDiscountType('percent')" id="mdisc-btn-percent" class="py-2.5 px-3 rounded-xl border border-primary-600 bg-primary-600 text-white flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-percent"></i> Persen (%)
+        </button>
+        <button onclick="setManualDiscountType('nominal')" id="mdisc-btn-nominal" class="py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-money-bill-wave"></i> Nominal (Rp)
+        </button>
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-slate-600 font-semibold mb-1 text-xs" id="mdisc-input-label">Masukkan Persentase Diskon (%)</label>
+        <div class="relative">
+          <span id="mdisc-input-prefix" class="absolute left-3 top-3 text-slate-400 text-sm font-bold">%</span>
+          <input type="number" id="mdisc-value-input" min="0" oninput="previewManualDiscount()" placeholder="0" class="w-full pl-8 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-base font-bold rounded-xl focus:ring-2 focus:ring-primary-500 focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Preview Potongan -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs mb-4">
+        <span class="font-semibold text-slate-600">Potongan Diskon Manual:</span>
+        <span id="mdisc-preview-val" class="font-black text-emerald-600">- Rp 0</span>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="flex gap-2">
+        <button onclick="removeManualDiscount()" class="flex-1 py-2.5 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl font-bold text-xs">
+          Hapus Diskon
+        </button>
+        <button onclick="applyManualDiscount()" class="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-xs shadow-sm">
+          Terapkan
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ==================== MODAL 3: CETAK STRUK THERMAL NOTA ==================== -->
   <div id="modal-receipt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
@@ -833,6 +891,9 @@
     let activeDebtItem = null;
     let lastReceiptData = null;
     let lastReceiptTrxId = null;
+    let manualDiscount = { type: 'percent', value: 0 }; // Diskon manual aktif di keranjang saat ini
+    let pendingDiscountType = 'percent'; // Jenis yang sedang dipilih di modal (sebelum ditekan "Terapkan")
+    let lastCartSubtotal = 0;
 
     // Buffer untuk Barcode Scanner Fisik (USB / Bluetooth Laser)
     let barcodeScannerBuffer = "";
@@ -1287,6 +1348,7 @@
 
     function clearCart() {
       cart = [];
+      manualDiscount = { type: 'percent', value: 0 };
       renderCartUI();
     }
 
@@ -1350,11 +1412,23 @@
     function updateCartTotals() {
       const subtotal = cart.reduce((acc, item) => acc + (item.HargaJual * item.qty), 0);
       const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
+      lastCartSubtotal = subtotal;
 
-      // Ambil Diskon Member
+      // Ambil Diskon Member (otomatis dari data pelanggan)
       const custSelect = document.getElementById('cart-customer-select');
       const diskonPercent = custSelect ? parseFloat(custSelect.options[custSelect.selectedIndex]?.getAttribute('data-diskon') || 0) : 0;
-      const diskonVal = Math.round(subtotal * (diskonPercent / 100));
+      const diskonMemberVal = Math.round(subtotal * (diskonPercent / 100));
+
+      // Diskon Manual (Persen atau Nominal, input bebas oleh kasir)
+      let diskonManualVal = 0;
+      if (manualDiscount.value > 0) {
+        diskonManualVal = manualDiscount.type === 'percent'
+          ? Math.round(subtotal * (manualDiscount.value / 100))
+          : manualDiscount.value;
+      }
+
+      // Total diskon (member + manual), dibatasi maksimal sebesar subtotal
+      const diskonVal = Math.min(subtotal, diskonMemberVal + diskonManualVal);
 
       // PPN 11% Toggle
       const ppnChecked = document.getElementById('cart-ppn-toggle').checked;
@@ -1364,12 +1438,110 @@
 
       document.getElementById('cart-subtotal').innerText = `Rp ${formatRupiah(subtotal)}`;
       document.getElementById('cart-discount-badge').innerText = `${diskonPercent}%`;
-      document.getElementById('cart-discount-val').innerText = `- Rp ${formatRupiah(diskonVal)}`;
+      document.getElementById('cart-discount-val').innerText = `- Rp ${formatRupiah(diskonMemberVal)}`;
+
+      const manualBadge = document.getElementById('cart-manual-discount-badge');
+      if (manualDiscount.value > 0) {
+        manualBadge.innerText = manualDiscount.type === 'percent' ? `${manualDiscount.value}%` : `Rp ${formatRupiah(manualDiscount.value)}`;
+        manualBadge.classList.remove('bg-slate-100', 'text-slate-500');
+        manualBadge.classList.add('bg-emerald-100', 'text-emerald-700');
+      } else {
+        manualBadge.innerText = 'Atur';
+        manualBadge.classList.add('bg-slate-100', 'text-slate-500');
+        manualBadge.classList.remove('bg-emerald-100', 'text-emerald-700');
+      }
+      document.getElementById('cart-manual-discount-val').innerText = `- Rp ${formatRupiah(diskonManualVal)}`;
+
       document.getElementById('cart-ppn-val').innerText = `Rp ${formatRupiah(ppnVal)}`;
       document.getElementById('cart-grand-total').innerText = `Rp ${formatRupiah(grandTotal)}`;
       document.getElementById('cart-total-qty-badge').innerText = `${totalQty} Item`;
 
       return { subtotal, diskonVal, ppnVal, grandTotal, totalQty };
+    }
+
+    /**
+     * ==================== MODUL DISKON MANUAL (PERSEN / NOMINAL) ====================
+     */
+    function openManualDiscountModal() {
+      pendingDiscountType = manualDiscount.type;
+      document.getElementById('mdisc-value-input').value = manualDiscount.value > 0 ? manualDiscount.value : '';
+      updateManualDiscountTypeUI();
+      previewManualDiscount();
+      document.getElementById('modal-manual-discount').classList.remove('hidden');
+    }
+
+    function closeManualDiscountModal() {
+      document.getElementById('modal-manual-discount').classList.add('hidden');
+    }
+
+    function setManualDiscountType(type) {
+      pendingDiscountType = type;
+      updateManualDiscountTypeUI();
+      previewManualDiscount();
+    }
+
+    function updateManualDiscountTypeUI() {
+      const btnPercent = document.getElementById('mdisc-btn-percent');
+      const btnNominal = document.getElementById('mdisc-btn-nominal');
+      const label = document.getElementById('mdisc-input-label');
+      const prefix = document.getElementById('mdisc-input-prefix');
+      const activeClasses = ['border-primary-600', 'bg-primary-600', 'text-white'];
+      const inactiveClasses = ['border-slate-200', 'bg-slate-50', 'text-slate-700'];
+
+      if (pendingDiscountType === 'percent') {
+        btnPercent.classList.add(...activeClasses);
+        btnPercent.classList.remove(...inactiveClasses);
+        btnNominal.classList.remove(...activeClasses);
+        btnNominal.classList.add(...inactiveClasses);
+        label.innerText = 'Masukkan Persentase Diskon (%)';
+        prefix.innerText = '%';
+      } else {
+        btnNominal.classList.add(...activeClasses);
+        btnNominal.classList.remove(...inactiveClasses);
+        btnPercent.classList.remove(...activeClasses);
+        btnPercent.classList.add(...inactiveClasses);
+        label.innerText = 'Masukkan Potongan Nominal (Rp)';
+        prefix.innerText = 'Rp';
+      }
+    }
+
+    function previewManualDiscount() {
+      const val = parseFloat(document.getElementById('mdisc-value-input').value || 0);
+      const subtotal = lastCartSubtotal;
+      let potongan = 0;
+      if (pendingDiscountType === 'percent') {
+        const persen = Math.min(Math.max(val, 0), 100);
+        potongan = Math.round(subtotal * (persen / 100));
+      } else {
+        potongan = Math.min(Math.max(val, 0), subtotal);
+      }
+      document.getElementById('mdisc-preview-val').innerText = `- Rp ${formatRupiah(potongan)}`;
+    }
+
+    function applyManualDiscount() {
+      const val = parseFloat(document.getElementById('mdisc-value-input').value || 0);
+
+      if (val < 0) {
+        showToast("Nilai diskon tidak boleh negatif!", "error");
+        return;
+      }
+      if (pendingDiscountType === 'percent' && val > 100) {
+        showToast("Diskon persen maksimal 100%!", "error");
+        return;
+      }
+
+      manualDiscount = { type: pendingDiscountType, value: val };
+      closeManualDiscountModal();
+      updateCartTotals();
+      showToast(val > 0 ? "Diskon manual diterapkan" : "Diskon manual dihapus");
+    }
+
+    function removeManualDiscount() {
+      manualDiscount = { type: 'percent', value: 0 };
+      document.getElementById('mdisc-value-input').value = '';
+      closeManualDiscountModal();
+      updateCartTotals();
+      showToast("Diskon manual dihapus");
     }
 
     /**
