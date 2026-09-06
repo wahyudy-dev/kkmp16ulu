@@ -1217,6 +1217,18 @@
       document.getElementById('user-role-display').innerText = currentUser.role;
       document.getElementById('user-avatar').innerText = (currentUser.username[0] || 'U').toUpperCase();
 
+      // Menu Laporan hanya untuk role Admin, disembunyikan untuk Kasir
+      const tabLaporan = document.getElementById('tab-btn-laporan');
+      if (currentUser.role === 'Admin') {
+        tabLaporan.classList.remove('hidden');
+      } else {
+        tabLaporan.classList.add('hidden');
+        // Jika tab Laporan kebetulan sedang aktif (sesi sebelumnya), alihkan ke Mesin Kasir
+        if (!document.getElementById('view-laporan').classList.contains('hidden')) {
+          switchTab('pos');
+        }
+      }
+
       checkBackendConnection();
       renderCartUI();
     }
@@ -2549,6 +2561,12 @@
      * Navigasi Antar Tab View
      */
     function switchTab(tabId) {
+      // Kasir tidak diizinkan mengakses tab Laporan (khusus Admin)
+      if (tabId === 'laporan' && currentUser.role !== 'Admin') {
+        showToast("Menu Laporan hanya untuk Admin", "error");
+        return;
+      }
+
       document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(b => {
         b.classList.remove('border-primary-600', 'text-primary-600', 'font-bold');
