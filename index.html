@@ -187,6 +187,9 @@
       <button onclick="switchTab('hutang')" id="tab-btn-hutang" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
         <i class="fa-solid fa-book-bookmark"></i> Catatan Hutang
       </button>
+      <button onclick="switchTab('riwayat')" id="tab-btn-riwayat" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+        <i class="fa-solid fa-receipt"></i> Riwayat Struk
+      </button>
       <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="tab-btn py-2.5 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
         <i class="fa-solid fa-chart-line"></i> Laporan
       </button>
@@ -428,6 +431,30 @@
               <!-- Loaded by JS -->
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RIWAYAT STRUK (10 TRANSAKSI TERAKHIR) -->
+    <div id="view-riwayat" class="tab-view hidden space-y-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">10 Transaksi Terakhir</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Buka struk untuk cetak ulang atau kirim ulang lewat WhatsApp</p>
+          </div>
+          <button onclick="renderRecentTransactions()" title="Muat Ulang" class="text-xs text-slate-500 hover:text-primary-600 flex items-center gap-1.5 border border-slate-200 hover:border-primary-300 px-2.5 py-1.5 rounded-lg transition">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+
+        <div id="recent-trx-list" class="space-y-2">
+          <!-- Diisi oleh JS -->
+        </div>
+
+        <div id="recent-trx-empty" class="hidden text-center text-xs text-slate-400 py-10">
+          <i class="fa-solid fa-receipt text-2xl mb-2 block"></i>
+          Belum ada transaksi.
         </div>
       </div>
     </div>
@@ -1140,6 +1167,7 @@
         renderCustomerTable();
         renderDebtTable();
         renderReports();
+        renderRecentTransactions();
 
         statusText.innerText = "Tersambung ke Cloud";
       } catch (e) {
@@ -1939,7 +1967,7 @@
       waInput.value = autoPhone;
 
       document.getElementById('rcpt-trx-id').innerText = trxId;
-      document.getElementById('rcpt-time').innerText = new Date().toLocaleString('id-ID');
+      document.getElementById('rcpt-time').innerText = data.tgl || new Date().toLocaleString('id-ID');
       document.getElementById('rcpt-cashier').innerText = data.kasir || currentUser.username;
       document.getElementById('rcpt-customer').innerText = data.pelanggan || 'Umum';
 
@@ -2509,6 +2537,101 @@
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Penjualan");
       XLSX.writeFile(wb, `Laporan_Penjualan_${new Date().toISOString().split('T')[0]}.xlsx`);
       showToast("File Excel berhasil diunduh!");
+    }
+
+    /**
+     * ==================== MENU RIWAYAT STRUK (10 TRANSAKSI TERAKHIR) ====================
+     */
+
+    // Ambil 10 transaksi paling baru dari data reports (diurutkan berdasarkan waktu, terbaru dulu)
+    function getRecentTransactions() {
+      return reports
+        .map(r => ({ row: r, date: parseLaporanDate(r[1]) }))
+        .sort((a, b) => (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0))
+        .slice(0, 10)
+        .map(x => x.row);
+    }
+
+    // Render daftar 10 transaksi terakhir sebagai kartu, masing-masing dengan tombol buka struk
+    function renderRecentTransactions() {
+      const container = document.getElementById('recent-trx-list');
+      const emptyBox = document.getElementById('recent-trx-empty');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const recent = getRecentTransactions();
+
+      if (recent.length === 0) {
+        emptyBox.classList.remove('hidden');
+        return;
+      }
+      emptyBox.classList.add('hidden');
+
+      recent.forEach(r => {
+        const [trxId, waktu, pelanggan, kasir, rincian, totalJual, laba, diskon, ppn, metode] = r;
+        const card = document.createElement('div');
+        card.className = 'border border-slate-200 rounded-xl p-3 hover:border-primary-300 transition';
+        card.innerHTML = `
+          <div class="flex justify-between items-start gap-2 mb-1.5">
+            <div>
+              <p class="font-mono font-bold text-xs text-slate-700">${trxId}</p>
+              <p class="text-[11px] text-slate-500">${waktu} &bull; ${pelanggan} &bull; ${kasir}</p>
+            </div>
+            <span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded shrink-0">${metode || 'Tunai'}</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-2 truncate" title="${rincian || ''}">${rincian || '-'}</p>
+          <div class="flex items-center justify-between">
+            <span class="font-black text-slate-900 text-sm">Rp ${formatRupiah(parseFloat(totalJual) || 0)}</span>
+            <button onclick="reprintTransaction('${trxId}')" class="bg-primary-50 hover:bg-primary-100 text-primary-700 text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+              <i class="fa-solid fa-receipt"></i> Buka Struk
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Urai kembali teks "Rincian Item" (mis. "BERAS 5KG (5Kg x 60000)") menjadi array item terstruktur
+    function parseRincianItems(rincianStr) {
+      if (!rincianStr) return [];
+      return rincianStr.toString().split(', ').map(entry => {
+        const match = entry.match(/^(.*) \(([\d.]+)([^\d]*) x ([\d.]+)\)$/);
+        if (match) {
+          return {
+            nama: match[1].trim(),
+            qty: parseFloat(match[2]) || 1,
+            satuan: (match[3] || '').trim() || 'Unit',
+            harga: parseFloat(match[4]) || 0
+          };
+        }
+        return { nama: entry.trim(), qty: 1, satuan: 'Unit', harga: 0 };
+      });
+    }
+
+    // Buka kembali modal struk (Cetak / Kirim WA) dari data riwayat transaksi yang tersimpan
+    function reprintTransaction(trxId) {
+      const r = reports.find(row => row[0] === trxId);
+      if (!r) {
+        showToast("Data transaksi tidak ditemukan", "error");
+        return;
+      }
+
+      const [id, waktu, pelanggan, kasir, rincian, totalJual, laba, diskon, ppn, metode] = r;
+      const data = {
+        tgl: waktu,
+        pelanggan: pelanggan,
+        idPelanggan: '-',
+        kasir: kasir,
+        items: parseRincianItems(rincian),
+        totalJual: parseFloat(totalJual) || 0,
+        diskon: parseFloat(diskon) || 0,
+        ppn: parseFloat(ppn) || 0,
+        metodeBayar: metode || 'Tunai',
+        cash: parseFloat(totalJual) || 0,
+        change: 0
+      };
+
+      showReceiptModal(data, id);
     }
 
     /**
