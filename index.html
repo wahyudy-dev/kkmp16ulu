@@ -417,6 +417,35 @@
             <i class="fa-solid fa-file-excel"></i> Download Excel
           </button>
         </div>
+
+        <!-- Filter & Sortir Berdasarkan Tanggal / Bulan / Tahun -->
+        <div class="flex flex-col lg:flex-row lg:items-center gap-2 mb-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <div class="flex items-center gap-1.5 flex-wrap text-[11px]" id="report-quick-filter-chips">
+            <button onclick="setReportQuickFilter('all')" data-quick="all" class="report-quick-btn px-2.5 py-1.5 rounded-lg font-bold bg-primary-600 text-white">Semua</button>
+            <button onclick="setReportQuickFilter('today')" data-quick="today" class="report-quick-btn px-2.5 py-1.5 rounded-lg font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100">Hari Ini</button>
+            <button onclick="setReportQuickFilter('month')" data-quick="month" class="report-quick-btn px-2.5 py-1.5 rounded-lg font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100">Bulan Ini</button>
+            <button onclick="setReportQuickFilter('year')" data-quick="year" class="report-quick-btn px-2.5 py-1.5 rounded-lg font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-100">Tahun Ini</button>
+          </div>
+
+          <div class="flex items-center gap-1.5 text-[11px] flex-wrap">
+            <label class="text-slate-500 font-semibold whitespace-nowrap">Dari</label>
+            <input type="date" id="report-filter-from" onchange="applyReportFilter()" class="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <label class="text-slate-500 font-semibold whitespace-nowrap">Sampai</label>
+            <input type="date" id="report-filter-to" onchange="applyReportFilter()" class="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <button onclick="resetReportFilter()" title="Reset Filter" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 font-semibold">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-1.5 text-[11px] lg:ml-auto">
+            <label class="text-slate-500 font-semibold whitespace-nowrap">Urutkan</label>
+            <select id="report-sort-order" onchange="applyReportFilter()" class="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500">
+              <option value="desc" selected>Tanggal Terbaru</option>
+              <option value="asc">Tanggal Terlama</option>
+            </select>
+          </div>
+        </div>
+
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs text-slate-600">
             <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
@@ -883,6 +912,9 @@
     let customers = [];
     let debts = [];
     let reports = [];
+    let reportFilterFrom = '';
+    let reportFilterTo = '';
+    let reportSortOrder = 'desc';
     let cart = [];
     let selectedCategory = "SEMUA";
     let html5QrCode = null;
@@ -1788,7 +1820,7 @@
       text += `Kembali   : Rp ${formatRupiah(data.change || 0)}\n`;
       text += `------------------------------\n`;
       text += `Terima kasih atas kunjungan Anda\n`;
-      text += `Struk digital ini merupakan bukti transaksi yang sah. Barang yang dibeli tidak dapat ditukar/dikembalikan.`;
+      text += `Barang yang dibeli tidak dapat ditukar/dikembalikan.`;
 
       return text;
     }
@@ -2123,6 +2155,107 @@
     /**
      * ==================== TAB 5: LAPORAN PENJUALAN ====================
      */
+
+    // Ubah string waktu "dd/MM/yyyy HH:mm" (dari sheet) menjadi objek Date asli
+    function parseLaporanDate(str) {
+      if (!str) return null;
+      const [datePart, timePart] = str.toString().trim().split(' ');
+      if (!datePart) return null;
+      const [dd, mm, yyyy] = datePart.split('/').map(Number);
+      if (!dd || !mm || !yyyy) return null;
+      let hh = 0, min = 0;
+      if (timePart) {
+        const t = timePart.split(':').map(Number);
+        hh = t[0] || 0; min = t[1] || 0;
+      }
+      return new Date(yyyy, mm - 1, dd, hh, min);
+    }
+
+    // Format objek Date menjadi "yyyy-mm-dd" untuk input type="date"
+    function formatDateInputValue(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // Terapkan filter tanggal & urutan ke data reports, kembalikan array baru (tidak mengubah data asli)
+    function getFilteredSortedReports() {
+      let list = reports.map(r => ({ row: r, date: parseLaporanDate(r[1]) }));
+
+      if (reportFilterFrom) {
+        const fromDate = new Date(reportFilterFrom + 'T00:00:00');
+        list = list.filter(x => !x.date || x.date >= fromDate);
+      }
+      if (reportFilterTo) {
+        const toDate = new Date(reportFilterTo + 'T23:59:59');
+        list = list.filter(x => !x.date || x.date <= toDate);
+      }
+
+      list.sort((a, b) => {
+        const t1 = a.date ? a.date.getTime() : 0;
+        const t2 = b.date ? b.date.getTime() : 0;
+        return reportSortOrder === 'asc' ? t1 - t2 : t2 - t1;
+      });
+
+      return list.map(x => x.row);
+    }
+
+    // Dipanggil saat input tanggal/urutan diubah manual oleh user
+    function applyReportFilter() {
+      reportFilterFrom = document.getElementById('report-filter-from').value;
+      reportFilterTo = document.getElementById('report-filter-to').value;
+      reportSortOrder = document.getElementById('report-sort-order').value;
+      highlightReportQuickChip(null); // tanggal diubah manual, non-aktifkan semua chip cepat
+      renderReports();
+    }
+
+    // Filter cepat: Semua / Hari Ini / Bulan Ini / Tahun Ini
+    function setReportQuickFilter(type) {
+      const now = new Date();
+      let from = '', to = '';
+
+      if (type === 'today') {
+        from = to = formatDateInputValue(now);
+      } else if (type === 'month') {
+        from = formatDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
+        to = formatDateInputValue(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+      } else if (type === 'year') {
+        from = formatDateInputValue(new Date(now.getFullYear(), 0, 1));
+        to = formatDateInputValue(new Date(now.getFullYear(), 11, 31));
+      } else {
+        from = ''; to = '';
+      }
+
+      document.getElementById('report-filter-from').value = from;
+      document.getElementById('report-filter-to').value = to;
+      reportFilterFrom = from;
+      reportFilterTo = to;
+
+      highlightReportQuickChip(type);
+      renderReports();
+    }
+
+    // Sorot chip filter cepat yang sedang aktif
+    function highlightReportQuickChip(activeType) {
+      document.querySelectorAll('.report-quick-btn').forEach(btn => {
+        const isActive = btn.getAttribute('data-quick') === activeType;
+        btn.classList.toggle('bg-primary-600', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-white', !isActive);
+        btn.classList.toggle('border', !isActive);
+        btn.classList.toggle('border-slate-200', !isActive);
+        btn.classList.toggle('text-slate-600', !isActive);
+      });
+    }
+
+    // Kembalikan filter & urutan ke kondisi awal (semua data, terbaru dulu)
+    function resetReportFilter() {
+      document.getElementById('report-sort-order').value = 'desc';
+      reportSortOrder = 'desc';
+      setReportQuickFilter('all');
+    }
+
     function renderReports() {
       const tbody = document.getElementById('report-table-body');
       tbody.innerHTML = '';
@@ -2130,7 +2263,9 @@
       let totalOmzet = 0;
       let totalLaba = 0;
 
-      reports.forEach(r => {
+      const filteredReports = getFilteredSortedReports();
+
+      filteredReports.forEach(r => {
         // [trxId, waktu, pelanggan, kasir, items, totalJual, laba, diskon, ppn, metode]
         const totalJual = parseFloat(r[5] || 0);
         const laba = parseFloat(r[6] || 0);
@@ -2154,17 +2289,18 @@
 
       document.getElementById('report-omzet').innerText = `Rp ${formatRupiah(totalOmzet)}`;
       document.getElementById('report-laba').innerText = `Rp ${formatRupiah(totalLaba)}`;
-      document.getElementById('report-count').innerText = reports.length;
+      document.getElementById('report-count').innerText = filteredReports.length;
     }
 
     function exportReportToExcel() {
-      if (reports.length === 0) {
-        showToast("Belum ada data riwayat penjualan", "error");
+      const filteredReports = getFilteredSortedReports();
+      if (filteredReports.length === 0) {
+        showToast("Belum ada data riwayat penjualan pada filter ini", "error");
         return;
       }
       const data = [
         ["ID Transaksi", "Waktu", "Pelanggan", "Kasir", "Detail Barang", "Total Jual", "Laba", "Diskon", "PPN", "Metode"],
-        ...reports
+        ...filteredReports
       ];
       const ws = XLSX.utils.aoa_to_sheet(data);
       const wb = XLSX.utils.book_new();
