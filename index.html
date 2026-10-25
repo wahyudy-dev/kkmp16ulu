@@ -972,6 +972,128 @@
     </div>
   </div>
 
+    <!-- ==================== MODAL 8: EDIT TRANSAKSI (ADMIN) ==================== -->
+  <div id="modal-edit-trx" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 flex flex-col max-h-[92vh]">
+      <div class="flex justify-between items-center border-b border-slate-100 p-4 sm:p-5">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Edit Transaksi</h3>
+          <p class="text-[11px] text-slate-500 font-mono" id="edit-trx-id">-</p>
+        </div>
+        <button onclick="closeEditTransactionModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Waktu Transaksi</label>
+            <input type="text" id="edit-trx-waktu" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2 text-slate-500">
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Kasir</label>
+            <input type="text" id="edit-trx-kasir" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2 text-slate-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Pelanggan</label>
+            <input type="text" id="edit-trx-customer" list="edit-trx-customer-list" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+            <datalist id="edit-trx-customer-list"></datalist>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Metode Pembayaran</label>
+            <select id="edit-trx-method" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 focus:ring-2 focus:ring-primary-500 focus:outline-none"></select>
+          </div>
+        </div>
+        <p id="edit-trx-hutang-note" class="hidden text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2">
+          <i class="fa-solid fa-circle-info"></i> Transaksi ini berstatus Hutang. Total tagihan & sisa hutang di Catatan Hutang akan ikut disesuaikan (uang muka/cicilan yang sudah masuk tidak berubah).
+        </p>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-slate-600 font-semibold">Rincian Barang</label>
+            <button onclick="addEditItemRow()" type="button" class="text-primary-600 hover:text-primary-700 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-plus"></i> Tambah Item
+            </button>
+          </div>
+          <div class="hidden sm:grid grid-cols-12 gap-1.5 text-[10px] font-bold text-slate-400 uppercase px-0.5 mb-1">
+            <span class="col-span-5">Nama Barang</span>
+            <span class="col-span-2">Jumlah</span>
+            <span class="col-span-2">Satuan</span>
+            <span class="col-span-2">Harga (Rp)</span>
+            <span class="col-span-1"></span>
+          </div>
+          <div id="edit-trx-items" class="space-y-1.5"></div>
+          <datalist id="edit-trx-product-list"></datalist>
+          <p id="edit-trx-warn" class="hidden mt-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Diskon (Rp)</label>
+            <input type="number" min="0" id="edit-trx-diskon" oninput="updateEditTrxTotals()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">PPN (Rp)</label>
+            <input type="number" min="0" id="edit-trx-ppn" oninput="updateEditTrxTotals()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+          </div>
+        </div>
+
+        <label class="flex items-start gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <input type="checkbox" id="edit-trx-adjust-stock" checked class="mt-0.5 rounded text-primary-600 focus:ring-primary-500">
+          <span class="text-slate-600">Sesuaikan stok produk otomatis<br><span class="text-[10px] text-slate-400">Stok lama dikembalikan, stok baru dikurangi (dicocokkan berdasarkan nama produk)</span></span>
+        </label>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+          <div class="flex justify-between text-slate-500"><span>Subtotal</span><span id="edit-trx-subtotal" class="font-semibold text-slate-800">Rp 0</span></div>
+          <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+            <span class="font-bold text-slate-700">Total Baru</span>
+            <span id="edit-trx-total" class="text-lg font-black text-primary-700">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 p-4 sm:p-5 border-t border-slate-100">
+        <button onclick="closeEditTransactionModal()" class="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-xs">Batal</button>
+        <button onclick="saveEditTransaction()" id="btn-save-edit-trx" class="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-xs shadow-sm">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 9: HAPUS TRANSAKSI (ADMIN) ==================== -->
+  <div id="modal-delete-trx" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-trash"></i></div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Hapus Transaksi?</h3>
+          <p class="text-[11px] text-slate-500">Tindakan ini tidak dapat dibatalkan</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1 mb-3">
+        <div class="flex justify-between"><span class="text-slate-500">No. Transaksi</span><span id="del-trx-id" class="font-mono font-bold text-slate-800">-</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Pelanggan</span><span id="del-trx-customer" class="font-bold text-slate-800">-</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Total</span><span id="del-trx-total" class="font-black text-slate-900">Rp 0</span></div>
+      </div>
+
+      <label class="flex items-start gap-2 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs mb-2">
+        <input type="checkbox" id="del-trx-restore-stock" checked class="mt-0.5 rounded text-primary-600 focus:ring-primary-500">
+        <span class="text-slate-600">Kembalikan stok barang ke produk<br><span class="text-[10px] text-slate-400">Dicocokkan berdasarkan nama produk</span></span>
+      </label>
+
+      <p id="del-trx-hutang-warn" class="hidden text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-2 mb-2">
+        <i class="fa-solid fa-triangle-exclamation"></i> Transaksi ini berupa Hutang. Catatan hutang beserta riwayat cicilannya juga akan ikut terhapus.
+      </p>
+
+      <div class="flex gap-2 mt-3">
+        <button onclick="closeDeleteTransactionModal()" class="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-xs">Batal</button>
+        <button onclick="confirmDeleteTransaction()" id="btn-confirm-delete-trx" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-sm">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
   <div id="toast-box" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
@@ -1138,6 +1260,7 @@
       }
       if (action === 'getDebts') return [];
       if (action === 'getReports') return [];
+      if (action === 'updateTransaction' || action === 'deleteTransaction') return { success: false, message: "Tidak dapat terhubung ke server. Perubahan tidak tersimpan." };
       if (action === 'login') return { success: false, message: "Tidak dapat terhubung ke server. Periksa koneksi internet atau pengaturan API." };
       return { success: true };
     }
@@ -2582,9 +2705,19 @@
           <p class="text-[11px] text-slate-500 mb-2 truncate" title="${rincian || ''}">${rincian || '-'}</p>
           <div class="flex items-center justify-between">
             <span class="font-black text-slate-900 text-sm">Rp ${formatRupiah(parseFloat(totalJual) || 0)}</span>
-            <button onclick="reprintTransaction('${trxId}')" class="bg-primary-50 hover:bg-primary-100 text-primary-700 text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5">
+              ${currentUser.role === 'Admin' ? `
+                <button onclick="openEditTransactionModal('${trxId}')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                  <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+                <button onclick="openDeleteTransactionModal('${trxId}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                  <i class="fa-solid fa-trash"></i> Hapus
+                </button>
+              ` : ''}
+              <button onclick="reprintTransaction('${trxId}')" class="bg-primary-50 hover:bg-primary-100 text-primary-700 text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
               <i class="fa-solid fa-receipt"></i> Buka Struk
             </button>
+            </div>
           </div>
         `;
         container.appendChild(card);
@@ -2601,10 +2734,11 @@
             nama: match[1].trim(),
             qty: parseFloat(match[2]) || 1,
             satuan: (match[3] || '').trim() || 'Unit',
-            harga: parseFloat(match[4]) || 0
+            harga: parseFloat(match[4]) || 0,
+            ok: true
           };
         }
-        return { nama: entry.trim(), qty: 1, satuan: 'Unit', harga: 0 };
+        return { nama: entry.trim(), qty: 1, satuan: 'Unit', harga: 0, ok: false };
       });
     }
 
@@ -2721,6 +2855,265 @@
 
       if (isAutoExpire) {
         showToast("Sesi login berakhir, silakan masuk kembali.", "error");
+      }
+    }
+
+    /**
+     * ==================== EDIT & HAPUS TRANSAKSI (KHUSUS ADMIN) ====================
+     */
+    let editingTrx = null;
+    let deletingTrx = null;
+
+    function findReportRow(trxId) {
+      return reports.find(row => row[0] === trxId);
+    }
+
+    function isAdminUser() {
+      if (currentUser.role !== 'Admin') {
+        showToast("Fitur ini hanya untuk Admin", "error");
+        return false;
+      }
+      return true;
+    }
+
+    function openEditTransactionModal(trxId) {
+      if (!isAdminUser()) return;
+      const r = findReportRow(trxId);
+      if (!r) {
+        showToast("Data transaksi tidak ditemukan", "error");
+        return;
+      }
+
+      const [id, waktu, pelanggan, kasir, rincian, totalJual, laba, diskon, ppn, metode] = r;
+      const metodeAwal = metode || 'Tunai';
+      editingTrx = { trxId: id, metode: metodeAwal };
+
+      document.getElementById('edit-trx-id').innerText = id;
+      document.getElementById('edit-trx-waktu').value = waktu || '';
+      document.getElementById('edit-trx-kasir').value = kasir || '';
+      document.getElementById('edit-trx-customer').value = pelanggan || 'Pelanggan Umum';
+      document.getElementById('edit-trx-diskon').value = parseFloat(diskon) || 0;
+      document.getElementById('edit-trx-ppn').value = parseFloat(ppn) || 0;
+      document.getElementById('edit-trx-adjust-stock').checked = true;
+
+      // Saran nama pelanggan & produk
+      const custList = document.getElementById('edit-trx-customer-list');
+      custList.innerHTML = '';
+      ['Pelanggan Umum', ...customers.map(c => c.nama)].forEach(n => {
+        const o = document.createElement('option');
+        o.value = n;
+        custList.appendChild(o);
+      });
+      const prodList = document.getElementById('edit-trx-product-list');
+      prodList.innerHTML = '';
+      products.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.Nama;
+        prodList.appendChild(o);
+      });
+
+      // Pilihan metode: transaksi Hutang dikunci; transaksi lain tidak bisa diubah ke Hutang
+      const sel = document.getElementById('edit-trx-method');
+      sel.innerHTML = '';
+      let opts = metodeAwal === 'Hutang' ? ['Hutang'] : ['Tunai', 'QRIS / Transfer'];
+      if (!opts.includes(metodeAwal)) opts.push(metodeAwal);
+      opts.forEach(m => {
+        const o = document.createElement('option');
+        o.value = m;
+        o.text = m;
+        sel.appendChild(o);
+      });
+      sel.value = metodeAwal;
+      sel.disabled = (metodeAwal === 'Hutang');
+      document.getElementById('edit-trx-hutang-note').classList.toggle('hidden', metodeAwal !== 'Hutang');
+
+      // Item
+      const itemsBox = document.getElementById('edit-trx-items');
+      itemsBox.innerHTML = '';
+      const parsed = parseRincianItems(rincian);
+      parsed.forEach(it => addEditItemRow(it));
+
+      const warn = document.getElementById('edit-trx-warn');
+      if (parsed.some(it => it.ok === false)) {
+        warn.innerText = "Sebagian item pada transaksi lama formatnya tidak terbaca otomatis (harga 0). Periksa dan lengkapi jumlah & harga sebelum menyimpan.";
+        warn.classList.remove('hidden');
+      } else {
+        warn.classList.add('hidden');
+      }
+
+      updateEditTrxTotals();
+      document.getElementById('modal-edit-trx').classList.remove('hidden');
+    }
+
+    function closeEditTransactionModal() {
+      document.getElementById('modal-edit-trx').classList.add('hidden');
+      editingTrx = null;
+    }
+
+    function addEditItemRow(item) {
+      const it = item || { nama: '', qty: 1, satuan: 'Unit', harga: '' };
+      const inputCls = 'w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none';
+      const row = document.createElement('div');
+      row.className = 'edit-trx-item grid grid-cols-12 gap-1.5 items-center';
+      row.innerHTML = `
+        <input type="text" list="edit-trx-product-list" placeholder="Nama barang" onchange="onEditItemNameChange(this)" class="eti-nama col-span-12 sm:col-span-5 ${inputCls}">
+        <input type="number" min="0" step="any" placeholder="Jml" oninput="updateEditTrxTotals()" class="eti-qty col-span-3 sm:col-span-2 ${inputCls}">
+        <input type="text" placeholder="Satuan" class="eti-satuan col-span-3 sm:col-span-2 ${inputCls}">
+        <input type="number" min="0" step="any" placeholder="Harga" oninput="updateEditTrxTotals()" class="eti-harga col-span-4 sm:col-span-2 ${inputCls}">
+        <button type="button" title="Hapus item" onclick="removeEditItemRow(this)" class="col-span-2 sm:col-span-1 text-rose-500 hover:bg-rose-50 rounded-lg p-1.5"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      // Isi lewat properti .value agar aman dari karakter khusus (kutip, dll)
+      row.querySelector('.eti-nama').value = it.nama || '';
+      row.querySelector('.eti-qty').value = it.qty;
+      row.querySelector('.eti-satuan').value = it.satuan || 'Unit';
+      row.querySelector('.eti-harga').value = it.harga;
+      document.getElementById('edit-trx-items').appendChild(row);
+      updateEditTrxTotals();
+    }
+
+    function removeEditItemRow(btn) {
+      btn.closest('.edit-trx-item').remove();
+      updateEditTrxTotals();
+    }
+
+    // Jika nama cocok dengan produk master, isi otomatis satuan & harga (hanya jika masih kosong)
+    function onEditItemNameChange(input) {
+      const key = input.value.trim().toLowerCase();
+      const p = products.find(x => (x.Nama || '').toString().trim().toLowerCase() === key);
+      if (!p) return;
+      const row = input.closest('.edit-trx-item');
+      const hargaEl = row.querySelector('.eti-harga');
+      const satEl = row.querySelector('.eti-satuan');
+      if (!parseFloat(hargaEl.value)) hargaEl.value = p.HargaJual;
+      if (!satEl.value.trim() || satEl.value.trim() === 'Unit') satEl.value = p.Satuan || 'Unit';
+      updateEditTrxTotals();
+    }
+
+    function getEditTrxItems() {
+      return Array.from(document.querySelectorAll('#edit-trx-items .edit-trx-item')).map(row => ({
+        nama: row.querySelector('.eti-nama').value.trim(),
+        qty: parseFloat(row.querySelector('.eti-qty').value) || 0,
+        satuan: row.querySelector('.eti-satuan').value.trim() || 'Unit',
+        harga: parseFloat(row.querySelector('.eti-harga').value) || 0
+      }));
+    }
+
+    function updateEditTrxTotals() {
+      const items = getEditTrxItems();
+      const subtotal = items.reduce((a, i) => a + (i.qty * i.harga), 0);
+      const diskon = parseFloat(document.getElementById('edit-trx-diskon').value) || 0;
+      const ppn = parseFloat(document.getElementById('edit-trx-ppn').value) || 0;
+      const total = Math.max(0, subtotal - diskon + ppn);
+      document.getElementById('edit-trx-subtotal').innerText = `Rp ${formatRupiah(subtotal)}`;
+      document.getElementById('edit-trx-total').innerText = `Rp ${formatRupiah(total)}`;
+      return { items, subtotal, diskon, ppn, total };
+    }
+
+    async function saveEditTransaction() {
+      if (!isAdminUser() || !editingTrx) return;
+
+      const { items, subtotal, diskon, ppn } = updateEditTrxTotals();
+
+      if (items.length === 0) {
+        showToast("Minimal harus ada 1 item barang!", "error");
+        return;
+      }
+      for (let i = 0; i < items.length; i++) {
+        if (!items[i].nama) { showToast(`Nama barang pada baris ${i + 1} masih kosong!`, "error"); return; }
+        if (items[i].qty <= 0) { showToast(`Jumlah pada baris ${i + 1} harus lebih dari 0!`, "error"); return; }
+        if (items[i].harga <= 0) { showToast(`Harga pada baris ${i + 1} harus diisi!`, "error"); return; }
+      }
+      if (diskon < 0 || ppn < 0) { showToast("Diskon / PPN tidak boleh negatif!", "error"); return; }
+      if (diskon > subtotal) { showToast("Diskon tidak boleh melebihi subtotal!", "error"); return; }
+
+      const payload = {
+        trxId: editingTrx.trxId,
+        role: currentUser.role,
+        admin: currentUser.username,
+        pelanggan: document.getElementById('edit-trx-customer').value.trim() || 'Pelanggan Umum',
+        metodeBayar: document.getElementById('edit-trx-method').value,
+        items: items,
+        diskon: diskon,
+        ppn: ppn,
+        adjustStock: document.getElementById('edit-trx-adjust-stock').checked
+      };
+
+      const btn = document.getElementById('btn-save-edit-trx');
+      btn.disabled = true;
+      btn.innerText = "Menyimpan...";
+
+      try {
+        const res = await callBackend('updateTransaction', payload);
+        if (res && res.success) {
+          showToast("Transaksi berhasil diperbarui!");
+          closeEditTransactionModal();
+          await checkBackendConnection();
+          if (res.unmatchedStock && res.unmatchedStock.length > 0) {
+            showToast("Stok tidak disesuaikan (produk tidak ditemukan): " + res.unmatchedStock.join(', '), "error");
+          }
+        } else {
+          showToast("Gagal menyimpan: " + ((res && res.message) || "Tidak ada respon server"), "error");
+        }
+      } catch (e) {
+        showToast("Error sistem: " + e.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Simpan Perubahan";
+      }
+    }
+
+    function openDeleteTransactionModal(trxId) {
+      if (!isAdminUser()) return;
+      const r = findReportRow(trxId);
+      if (!r) {
+        showToast("Data transaksi tidak ditemukan", "error");
+        return;
+      }
+      deletingTrx = { trxId: r[0], metode: r[9] || 'Tunai' };
+
+      document.getElementById('del-trx-id').innerText = r[0];
+      document.getElementById('del-trx-customer').innerText = r[2] || '-';
+      document.getElementById('del-trx-total').innerText = `Rp ${formatRupiah(parseFloat(r[5]) || 0)}`;
+      document.getElementById('del-trx-restore-stock').checked = true;
+      document.getElementById('del-trx-hutang-warn').classList.toggle('hidden', deletingTrx.metode !== 'Hutang');
+
+      document.getElementById('modal-delete-trx').classList.remove('hidden');
+    }
+
+    function closeDeleteTransactionModal() {
+      document.getElementById('modal-delete-trx').classList.add('hidden');
+      deletingTrx = null;
+    }
+
+    async function confirmDeleteTransaction() {
+      if (!isAdminUser() || !deletingTrx) return;
+
+      const btn = document.getElementById('btn-confirm-delete-trx');
+      btn.disabled = true;
+      btn.innerText = "Menghapus...";
+
+      try {
+        const res = await callBackend('deleteTransaction', {
+          trxId: deletingTrx.trxId,
+          role: currentUser.role,
+          admin: currentUser.username,
+          restoreStock: document.getElementById('del-trx-restore-stock').checked
+        });
+        if (res && res.success) {
+          showToast("Transaksi berhasil dihapus");
+          closeDeleteTransactionModal();
+          await checkBackendConnection();
+          if (res.unmatchedStock && res.unmatchedStock.length > 0) {
+            showToast("Stok tidak dikembalikan (produk tidak ditemukan): " + res.unmatchedStock.join(', '), "error");
+          }
+        } else {
+          showToast("Gagal menghapus: " + ((res && res.message) || "Tidak ada respon server"), "error");
+        }
+      } catch (e) {
+        showToast("Error sistem: " + e.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Ya, Hapus";
       }
     }
 
