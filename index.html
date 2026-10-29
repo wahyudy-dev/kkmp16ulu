@@ -259,6 +259,15 @@
                   <i class="fa-solid fa-badge-percent"></i> Member Diskon: <span id="member-discount-rate">0%</span>
                 </div>
               </div>
+
+              <!-- Input Nama Pelanggan Manual (khusus Pelanggan Umum) -->
+              <div id="manual-customer-wrap" class="mt-2">
+                <div class="relative">
+                  <i class="fa-solid fa-user-pen absolute left-3 top-3 text-slate-400 text-xs"></i>
+                  <input type="text" id="cart-customer-manual" maxlength="60" autocomplete="off" placeholder="Nama pelanggan (ketik manual, opsional)" class="w-full pl-8 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white focus:outline-none transition">
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">Untuk pelanggan non-member. Wajib diisi jika pembayaran Hutang / Bon.</p>
+              </div>
             </div>
 
             <!-- List Item di Keranjang -->
@@ -1733,6 +1742,8 @@
 
     function clearCart() {
       cart = [];
+      const manualInput = document.getElementById('cart-customer-manual');
+      if (manualInput) manualInput.value = '';
       manualDiscount = { type: 'percent', value: 0 };
       renderCartUI();
     }
@@ -1791,7 +1802,27 @@
         badge.classList.add('hidden');
       }
 
+      // Input nama manual hanya tampil untuk Pelanggan Umum; member memakai nama dari data pelanggan
+      const manualWrap = document.getElementById('manual-customer-wrap');
+      if (manualWrap) {
+        const isUmum = select.value === 'Umum';
+        manualWrap.classList.toggle('hidden', !isUmum);
+        if (!isUmum) document.getElementById('cart-customer-manual').value = '';
+      }
+
       updateCartTotals();
+    }
+
+    // Bersihkan nama manual dari karakter berbahaya (HTML/kutip merusak tampilan tabel & tombol, "=+-@" di awal dianggap formula oleh Google Sheets)
+    function sanitizeCustomerName(raw) {
+      return (raw || '')
+        .toString()
+        .replace(/[<>"'`\\]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/^[=+\-@]+/, '')
+        .trim()
+        .slice(0, 60);
     }
 
     function updateCartTotals() {
@@ -2013,7 +2044,22 @@
       const { subtotal, diskonVal, ppnVal, grandTotal } = updateCartTotals();
       const custSelect = document.getElementById('cart-customer-select');
       const idPelanggan = custSelect.value;
-      const namaPelanggan = custSelect.options[custSelect.selectedIndex].text.split(' (')[0];
+      let namaPelanggan = custSelect.options[custSelect.selectedIndex].text.split(' (')[0];
+
+      // Pelanggan Umum: pakai nama yang diketik manual (jika diisi)
+      if (idPelanggan === 'Umum') {
+        const manualName = sanitizeCustomerName(document.getElementById('cart-customer-manual').value);
+        if (manualName) {
+          namaPelanggan = manualName;
+        } else if (selectedPayMethod === 'Hutang') {
+          showToast("Pembayaran Hutang wajib mengisi nama pelanggan!", "error");
+          closePaymentModal();
+          document.getElementById('cart-customer-manual').focus();
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-check"></i> Selesaikan Transaksi`;
+          return;
+        }
+      }
 
       let cashReceived = grandTotal;
       let cashChange = 0;
@@ -2343,6 +2389,8 @@
         opt.text = `${c.nama} (Member Diskon ${c.diskonPercent}%)`;
         select.appendChild(opt);
       });
+      // Sinkronkan badge member & kolom nama manual dengan pilihan terbaru (default: Pelanggan Umum)
+      handleCustomerChange();
     }
 
     function renderCustomerTable() {
